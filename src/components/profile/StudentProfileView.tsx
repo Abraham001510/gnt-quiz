@@ -4,7 +4,14 @@ import { supabase } from '../../lib/supabase';
 import { User, Phone, Mail, School, BookOpen, Clock, Award, CheckCircle2 } from 'lucide-react';
 
 export const StudentProfileView: React.FC = () => {
-  const { profile } = useAuth();
+  const auth = useAuth() as any;
+  const profile = auth.profile ?? (auth.user
+    ? {
+        ...auth.user.user_metadata,
+        id: auth.user.id,
+        email: auth.user.email,
+      }
+    : null);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

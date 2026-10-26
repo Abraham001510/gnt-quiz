@@ -39,7 +39,7 @@ const WeeklyUpdatesView: React.FC = () => (
 );
 
 export const App: React.FC = () => {
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<
     'profile' | 'analytics' | 'subject_practice' | 'leaderboard' | 'question_bank' | 'weekly_updates'
   >('profile');
@@ -227,7 +227,7 @@ export const App: React.FC = () => {
 
               <div className="space-y-2 text-center sm:text-left z-10">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-                  <GraduationCap className="w-4 h-4" /> Target Institution: {profile?.preferred_university || 'UTME 2026'}
+                  <GraduationCap className="w-4 h-4" /> Target Institution: UTME 2026
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-white">Ready for a Full 4-Subject Simulation?</h2>
                 <p className="text-slate-400 text-xs max-w-xl">

@@ -16,25 +16,32 @@ export const AuthModal: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg(null);
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
+  setErrorMsg(null);
 
+  try {
     if (isRegister) {
-      const res = await signUp(email, password, {
-        full_name: fullName,
-        phone_number: phoneNumber,
-        preferred_university: preferredUniversity,
-        intended_course: intendedCourse,
+      const { data, error } = await signUp({
+        email,
+        password,
+        fullName,
+        phoneNumber,
+        preferredUniversity,
+        intendedCourse,
       });
-      if (!res.success) setErrorMsg(res.error || 'Failed to register account');
+      if (error) throw error;
     } else {
-      const res = await login(email, password);
-      if (!res.success) setErrorMsg(res.error || 'Invalid credentials');
+      const { data, error } = await login(email, password);
+      if (error) throw error;
     }
-
-    setLoading(false);
-  };
+  } catch (err: any) {
+    console.error('Auth Error:', err);
+    setErrorMsg(err.message || 'Authentication failed. Please check your credentials.');
+  } finally {
+    setLoading(false); // Prevents form from hanging on "Authenticating..."
+  }
+};
 
   return (
     <div className="max-w-md mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-slate-100">
