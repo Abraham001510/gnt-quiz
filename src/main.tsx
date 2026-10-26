@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { App } from './App';
+import App from './App';
 import { AuthProvider } from './context/AuthContext';
 // @ts-ignore TypeScript may not include declarations for CSS side-effect imports.
 import './index.css';
