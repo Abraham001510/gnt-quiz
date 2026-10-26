@@ -10,7 +10,8 @@ interface ExamResultsViewProps {
 }
 
 export const ExamResultsView: React.FC<ExamResultsViewProps> = ({ attemptId, onBackToDashboard }) => {
-  const { profile } = useAuth();
+  const auth = useAuth();
+  const profile = (auth as any)?.profile ?? null;
   const [result, setResult] = useState<DetailedExamResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'incorrect' | 'correct'>('all');

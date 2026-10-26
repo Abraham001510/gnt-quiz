@@ -10,7 +10,8 @@ interface ExamLauncherProps {
 }
 
 export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
-  const { profile } = useAuth();
+  const auth = useAuth() as any;
+  const profile = auth?.profile ?? auth?.user ?? null;
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [englishSubject, setEnglishSubject] = useState<Subject | null>(null);
