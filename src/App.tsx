@@ -56,7 +56,7 @@ export default function App() {
   // Whitelist your admin email address alongside standard metadata checks
   const isAdmin = 
     user?.user_metadata?.role === 'admin' || 
-    user?.email === 'otunubiabraham@gmail.com';
+    user?.email === 'wellingtonalfred54@gmail.com';
 
   if (loading) {
     return (
