@@ -8,7 +8,6 @@ import { LeaderboardView } from './components/leaderboard/LeaderboardView';
 import { StudentProfileView } from './components/profile/StudentProfileView';
 import { ExamResultsView } from './components/results/ExamResultsView';
 import { WeeklyUpdatesView } from './components/admin/WeeklyUpdatesView';
-import { AutoCorrectModal } from './components/admin/AutoCorrectModal';
 import { BookOpen, Trophy, User, ShieldAlert, LogOut, Sparkles } from 'lucide-react';
 
 function ExamRoute() {
