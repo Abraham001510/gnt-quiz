@@ -11,9 +11,12 @@ interface MathTextProps {
 export const MathText: React.FC<MathTextProps> = ({ text, className = '' }) => {
   if (!text) return null;
 
-  // Split text by LaTeX delimiters \( ... \) or $ ... $
-  const regex = /(\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$[\s\S]*?\$)/g;
-  const parts = text.split(regex);
+  // Convert raw LaTeX \underline{...} into standard HTML <u>...</u> before splitting
+  const processedText = text.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
+
+  // Split text by LaTeX delimiters \( ... \), \[ ... \], $$ ... $$, or $ ... $
+  const regex = /(\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g;
+  const parts = processedText.split(regex);
 
   return (
     <span className={className}>
@@ -48,7 +51,13 @@ export const MathText: React.FC<MathTextProps> = ({ text, className = '' }) => {
           }
         }
 
-        return <span key={index}>{part}</span>;
+        // Render standard text parts with HTML support (<u>, <b>, <br/>)
+        return (
+          <span
+            key={index}
+            dangerouslySetInnerHTML={{ __html: part }}
+          />
+        );
       })}
     </span>
   );
