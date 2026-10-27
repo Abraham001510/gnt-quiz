@@ -10,12 +10,14 @@ interface CbtExamProps {
 }
 
 export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam }) => {
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [subjects, setSubjects] = useState<string[]>([]);
-  const [activeSubject, setActiveSubject] = useState<string>('');
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [questionsBySubject, setQuestionsBySubject] = useState<Record<string, any[]>>({});
+  const [subjectsList, setSubjectsList] = useState<string[]>([]);
+  const [activeSubject, setActiveSubject] = useState<string>('Use of English');
+  const [currentSubjectIndex, setCurrentSubjectIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
-  const [deadlineAt, setDeadlineAt] = useState<Date | null>(null);
+  
+  // Set explicit 2 Hours (120 Minutes) timer
+  const [deadlineAt] = useState<Date>(() => new Date(Date.now() + 120 * 60 * 1000));
   const [timeLeftStr, setTimeLeftStr] = useState<string>('120:00');
   const [isWarningFive, setIsWarningFive] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -28,110 +30,37 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       try {
         setLoading(true);
 
-        // 1. Fetch Attempt & Deadline
-        const { data: attempt } = await supabase
-          .from('exam_attempts')
-          .select('*')
-          .eq('id', attemptId)
-          .single();
-
-        if (attempt?.deadline_at && mounted) {
-          setDeadlineAt(new Date(attempt.deadline_at));
-        } else if (mounted) {
-          // Fallback: 2 Hours from now
-          setDeadlineAt(new Date(Date.now() + 120 * 60 * 1000));
-        }
-
-        // 2. Direct Questions Fetch
-        let loadedQuestions: any[] = [];
-        const { data: dbQuestions, error: qError } = await supabase
+        const { data: dbQuestions, error } = await supabase
           .from('questions')
-          .select('*');
+          .select('*')
+          .order('id', { ascending: true });
 
-        if (!qError && dbQuestions && dbQuestions.length > 0) {
-          loadedQuestions = dbQuestions;
-        } else {
-          // Fallback Mock Questions if database table is empty or unpopulated
-          loadedQuestions = [
-            {
-              id: 'q1',
-              subject: 'Use of English',
-              topic: 'Lexis and Structure',
-              question_text: 'Choose the option nearest in meaning to the underlined word: The manager made a **cursory** inspection of the office.',
-              option_a: 'Thorough and detailed',
-              option_b: 'Hasty and superficial',
-              option_c: 'Careful and calculated',
-              option_d: 'Official and formal',
-              correct_option: 'B',
-            },
-            {
-              id: 'q2',
-              subject: 'Mathematics',
-              topic: 'Indices and Logarithms',
-              question_text: 'Evaluate $25^{1/2} \\times 8^{2/3}$.',
-              option_a: '15',
-              option_b: '20',
-              option_c: '25',
-              option_d: '30',
-              correct_option: 'B',
-            },
-            {
-              id: 'q3',
-              subject: 'Physics',
-              topic: 'Vectors and Scalars',
-              question_text: 'Which of the following physical quantities is a vector?',
-              option_a: 'Mass',
-              option_b: 'Temperature',
-              option_c: 'Velocity',
-              option_d: 'Speed',
-              correct_option: 'C',
-            },
-            {
-              id: 'q4',
-              subject: 'Chemistry',
-              topic: 'Oxidation Numbers',
-              question_text: 'What is the oxidation state of Manganese in $KMnO_4$?',
-              option_a: '+2',
-              option_b: '+4',
-              option_c: '+6',
-              option_d: '+7',
-              correct_option: 'D',
-            },
-          ];
-        }
+        if (!error && dbQuestions && dbQuestions.length > 0 && mounted) {
+          // Group questions strictly by subject
+          const grouped: Record<string, any[]> = {};
 
-        if (mounted) {
-          setQuestions(loadedQuestions);
+          dbQuestions.forEach((q) => {
+            const sub = q.subject || 'Use of English';
+            if (!grouped[sub]) grouped[sub] = [];
+            grouped[sub].push(q);
+          });
 
-          // Extract Unique Subjects dynamically
-          const uniqueSubjects = Array.from(
-            new Set(loadedQuestions.map((q) => q.subject || 'General'))
-          );
-          setSubjects(uniqueSubjects);
-          if (uniqueSubjects.length > 0) {
-            setActiveSubject(uniqueSubjects[0]);
+          // Enforce JAMB quotas: 60 English, 40 for others
+          const formattedGrouped: Record<string, any[]> = {};
+          Object.keys(grouped).forEach((sub) => {
+            const quota = sub === 'Use of English' ? 60 : 40;
+            formattedGrouped[sub] = grouped[sub].slice(0, quota);
+          });
+
+          setQuestionsBySubject(formattedGrouped);
+          const subs = Object.keys(formattedGrouped);
+          setSubjectsList(subs);
+          if (subs.length > 0) {
+            setActiveSubject(subs[0]);
           }
-        }
-
-        // 3. Fetch Saved Answers safely
-        try {
-          const { data: savedAnswers } = await supabase
-            .from('student_answers')
-            .select('question_id, selected_option')
-            .eq('attempt_id', attemptId);
-
-          if (savedAnswers && mounted) {
-            const ansMap: Record<string, 'A' | 'B' | 'C' | 'D'> = {};
-            savedAnswers.forEach((a: any) => {
-              if (a.selected_option) ansMap[a.question_id] = a.selected_option;
-            });
-            setAnswers(ansMap);
-          }
-        } catch (e) {
-          console.warn('No saved answers found or table not present yet.');
         }
       } catch (err) {
-        console.error('Exam initialization warning:', err);
+        console.error('Error fetching questions:', err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -144,10 +73,8 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     };
   }, [attemptId]);
 
-  // Synchronized Timer Engine
+  // Synchronized 2-Hour Timer Engine
   useEffect(() => {
-    if (!deadlineAt) return;
-
     const interval = setInterval(() => {
       const now = new Date().getTime();
       const distance = deadlineAt.getTime() - now;
@@ -157,22 +84,29 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
         setTimeLeftStr('00:00');
         handleFinalize('timer_expired');
       } else {
+        const hours = Math.floor(distance / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        const totalMinutes = hours * 60 + minutes;
         setTimeLeftStr(
-          `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+          `${totalMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
         );
 
-        if (minutes < 5) setIsWarningFive(true);
+        if (totalMinutes < 5) setIsWarningFive(true);
       }
     }, 1000);
 
     return () => clearInterval(interval);
   }, [deadlineAt]);
 
-  const currentQuestion = questions[currentIndex];
-  const subjectQuestions = questions.filter(
-    (q) => (q.subject || 'General') === activeSubject
+  const activeQuestions = questionsBySubject[activeSubject] || [];
+  const currentQuestion = activeQuestions[currentSubjectIndex];
+
+  // Calculate total questions across all 4 subjects
+  const totalExamQuestions = Object.values(questionsBySubject).reduce(
+    (sum, list) => sum + list.length,
+    0
   );
 
   const handleSelectOption = async (option: 'A' | 'B' | 'C' | 'D') => {
@@ -201,7 +135,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
         })
         .eq('id', attemptId);
     } catch (e) {
-      console.warn('Finalize recorded locally.');
+      console.warn('Finalized locally.');
     }
 
     onFinalizeExam();
@@ -234,7 +168,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           </div>
         </div>
 
-        {/* Timer Box */}
+        {/* Timer Box (120:00) */}
         <div
           className={`flex items-center gap-2 px-4 py-1.5 rounded-xl border font-mono text-base font-bold ${
             isWarningFive
@@ -259,21 +193,16 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Column: Question Screen */}
         <div className="lg:col-span-3 space-y-4">
-          {/* Subject Navigation Tabs */}
+          {/* Subject Tabs */}
           <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 overflow-x-auto">
-            {subjects.map((sub) => {
-              const count = questions.filter(
-                (q) => (q.subject || 'General') === sub
-              ).length;
+            {subjectsList.map((sub) => {
+              const count = (questionsBySubject[sub] || []).length;
               return (
                 <button
                   key={sub}
                   onClick={() => {
                     setActiveSubject(sub);
-                    const firstIdx = questions.findIndex(
-                      (q) => (q.subject || 'General') === sub
-                    );
-                    if (firstIdx !== -1) setCurrentIndex(firstIdx);
+                    setCurrentSubjectIndex(0);
                   }}
                   className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-2 ${
                     activeSubject === sub
@@ -294,30 +223,19 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
             <div className="flex justify-between items-center pb-3 border-b border-slate-800">
               <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
-                Question {currentIndex + 1} of {questions.length}
+                {activeSubject}: Question {currentSubjectIndex + 1} of {activeQuestions.length}
               </span>
               <span className="text-xs font-mono bg-slate-800 px-2.5 py-1 rounded text-slate-400">
-                Topic: {currentQuestion.topic || activeSubject}
+                Total Exam: {totalExamQuestions} Questions
               </span>
             </div>
 
-            {/* Render Question Text */}
+            {/* Question Text */}
             <div className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
               <MathText text={currentQuestion.question_text || ''} />
             </div>
 
-            {/* Diagram Rendering in CBT Interface */}
-            {currentQuestion.image_url && (
-              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl my-3 flex justify-center">
-                <img
-                  src={currentQuestion.image_url}
-                  alt="Question Diagram"
-                  className="max-h-64 object-contain rounded-lg border border-slate-800 shadow-md"
-                />
-              </div>
-            )}
-
-            {/* Options rendered using MathText */}
+            {/* Options */}
             <div className="space-y-3 font-mono text-sm pt-2">
               {(['A', 'B', 'C', 'D'] as const).map((opt) => {
                 const optKey = `option_${opt.toLowerCase()}`;
@@ -353,17 +271,19 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
             {/* Bottom Nav Controls */}
             <div className="flex justify-between items-center pt-4 border-t border-slate-800">
               <button
-                disabled={currentIndex === 0}
-                onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+                disabled={currentSubjectIndex === 0}
+                onClick={() => setCurrentSubjectIndex((prev) => Math.max(0, prev - 1))}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1"
               >
                 <ChevronLeft className="w-4 h-4" /> Previous
               </button>
 
               <button
-                disabled={currentIndex === questions.length - 1}
+                disabled={currentSubjectIndex === activeQuestions.length - 1}
                 onClick={() =>
-                  setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))
+                  setCurrentSubjectIndex((prev) =>
+                    Math.min(activeQuestions.length - 1, prev + 1)
+                  )
                 }
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1"
               >
@@ -373,22 +293,21 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           </div>
         </div>
 
-        {/* Right Column: Question Palette Grid */}
+        {/* Right Column: Per-Subject Question Grid */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 h-fit">
           <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800">
-            Question Navigation Grid
+            {activeSubject} Grid (1 - {activeQuestions.length})
           </h4>
 
           <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto pr-1">
-            {subjectQuestions.map((q) => {
-              const globalIdx = questions.findIndex((item) => item.id === q.id);
+            {activeQuestions.map((q, idx) => {
               const isAnswered = !!answers[q.id];
-              const isCurrent = globalIdx === currentIndex;
+              const isCurrent = idx === currentSubjectIndex;
 
               return (
                 <button
                   key={q.id}
-                  onClick={() => setCurrentIndex(globalIdx)}
+                  onClick={() => setCurrentSubjectIndex(idx)}
                   className={`h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center ${
                     isCurrent
                       ? 'ring-2 ring-emerald-400 bg-emerald-600 text-white'
@@ -397,7 +316,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                       : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                   }`}
                 >
-                  {globalIdx + 1}
+                  {idx + 1}
                 </button>
               );
             })}
