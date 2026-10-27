@@ -103,7 +103,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
   const activeQuestions = questionsBySubject[activeSubject] || [];
   const currentQuestion = activeQuestions[currentSubjectIndex];
 
-  // Calculate total questions across all 4 subjects
+  // Calculate total questions across all subjects
   const totalExamQuestions = Object.values(questionsBySubject).reduce(
     (sum, list) => sum + list.length,
     0
@@ -149,6 +149,11 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       </div>
     );
   }
+
+  // Clean helper: Strips any leading "Subject Question XX:" prefixes if present in DB text
+  const cleanQuestionText = (text: string) => {
+    return text.replace(/^(English|Mathematics|Physics|Chemistry)\s+Question\s+\d+:\s*/i, '');
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
@@ -230,10 +235,21 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
               </span>
             </div>
 
-            {/* Question Text */}
+            {/* Clean Question Text */}
             <div className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
-              <MathText text={currentQuestion.question_text || ''} />
+              <MathText text={cleanQuestionText(currentQuestion.question_text || '')} />
             </div>
+
+            {/* Diagram Rendering (if available) */}
+            {currentQuestion.image_url && (
+              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl my-3 flex justify-center">
+                <img
+                  src={currentQuestion.image_url}
+                  alt="Question Diagram"
+                  className="max-h-64 object-contain rounded-lg border border-slate-800 shadow-md"
+                />
+              </div>
+            )}
 
             {/* Options */}
             <div className="space-y-3 font-mono text-sm pt-2">
