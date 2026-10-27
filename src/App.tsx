@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
@@ -57,13 +57,12 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 function ExamRoute() {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
-  // Guard: Redirect to home if user tries to access exam URL without logging in
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
+  const navigate = useNavigate();
   const [attemptId] = React.useState<string>(() => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
       return crypto.randomUUID();
@@ -103,9 +102,15 @@ function MainAppContent() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isAdmin =
-    user?.user_metadata?.role === 'admin' ||
-    user?.email === 'wellingtonalfred54@gmail.com';
+  // Auto-close Auth Modal whenever user logs in successfully
+  useEffect(() => {
+    if (user) {
+      setIsAuthOpen(false);
+    }
+  }, [user]);
+
+  // Strict Admin whitelist (Only your designated admin email has access)
+  const isAdmin = user?.email === 'wellingtonalfred54@gmail.com';
 
   const handleStartExam = (subject: string) => {
     if (!user) {
@@ -221,7 +226,7 @@ function MainAppContent() {
         </div>
       </header>
 
-      {/* Main Body */}
+      {/* Main Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Routes>
           <Route
