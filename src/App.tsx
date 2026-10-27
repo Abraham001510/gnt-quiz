@@ -8,9 +8,8 @@ import { LeaderboardView } from './components/leaderboard/LeaderboardView';
 import { StudentProfileView } from './components/profile/StudentProfileView';
 import { ExamResultsView } from './components/results/ExamResultsView';
 import { WeeklyUpdatesView } from './components/admin/WeeklyUpdatesView';
-import { BookOpen, Trophy, User, ShieldAlert, LogOut, Sparkles } from 'lucide-react';
+import { BookOpen, Trophy, User, ShieldAlert, LogOut, Sparkles, Lock } from 'lucide-react';
 
-// Error Boundary Props & State Interfaces
 interface ErrorBoundaryProps {
   children?: ReactNode;
 }
@@ -20,12 +19,8 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-// React Error Boundary Class to catch component startup and render phase errors
 class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  public state: ErrorBoundaryState = {
-    hasError: false,
-    error: null,
-  };
+  public state: ErrorBoundaryState = { hasError: false, error: null };
 
   public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
@@ -61,12 +56,18 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 }
 
 function ExamRoute() {
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Guard: Redirect to home if user tries to access exam URL without logging in
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
   const [attemptId] = React.useState<string>(() => {
     if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
       return crypto.randomUUID();
     }
-
     return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   });
 
@@ -102,10 +103,17 @@ function MainAppContent() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Whitelist your admin email address alongside standard metadata checks
   const isAdmin =
     user?.user_metadata?.role === 'admin' ||
     user?.email === 'wellingtonalfred54@gmail.com';
+
+  const handleStartExam = (subject: string) => {
+    if (!user) {
+      setIsAuthOpen(true);
+      return;
+    }
+    navigate(`/exam/${subject}`);
+  };
 
   if (loading) {
     return (
@@ -120,7 +128,7 @@ function MainAppContent() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
-      {/* Navigation Header */}
+      {/* Header */}
       <header className="sticky top-0 z-40 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
@@ -213,15 +221,31 @@ function MainAppContent() {
         </div>
       </header>
 
-      {/* Main App Content Body */}
+      {/* Main Body */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Routes>
           <Route
             path="/"
             element={
-              <ExamLauncher
-                onStartExam={(subject) => navigate(`/exam/${subject}`)}
-              />
+              <div className="space-y-6">
+                {!user && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Lock className="w-5 h-5 text-emerald-400 shrink-0" />
+                      <p className="text-sm text-slate-300">
+                        Please <strong className="text-emerald-400">Sign In</strong> or register an account to start taking full JAMB CBT practice simulations.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setIsAuthOpen(true)}
+                      className="whitespace-nowrap px-4 py-2 text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-lg transition-colors"
+                    >
+                      Sign In Now
+                    </button>
+                  </div>
+                )}
+                <ExamLauncher onStartExam={handleStartExam} />
+              </div>
             }
           />
           <Route path="/exam/:subject" element={<ExamRoute />} />
@@ -273,18 +297,29 @@ function MainAppContent() {
         </div>
       </footer>
 
-      {/* Auth Modal */}
-      <AuthModal
-        {...({
-          isOpen: isAuthOpen,
-          onClose: () => setIsAuthOpen(false),
-        } as any)}
-      />
+      {/* Auth Modal Overlay */}
+      {isAuthOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md">
+            <button
+              onClick={() => setIsAuthOpen(false)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-200 z-10 p-1"
+            >
+              ✕
+            </button>
+            <AuthModal
+              {...({
+                isOpen: true,
+                onClose: () => setIsAuthOpen(false),
+              } as any)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// Default Export wrapped with ErrorBoundary
 export default function App() {
   return (
     <ErrorBoundary>
