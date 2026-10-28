@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { seedQuestionBank } from '../../lib/seedQuestions';
 import { MathText } from '../common/MathText';
 import {
   Calendar,
@@ -15,11 +16,12 @@ import {
 } from 'lucide-react';
 
 export const WeeklyUpdatesView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'bank' | 'generator'>('bank');
+  const [activeTab, setActiveTab] = useState<'bank' | 'weekly'>('bank');
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState('Use of English');
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Form State for Adding / Generating Questions
   const [showAddForm, setShowAddForm] = useState(false);
@@ -57,6 +59,27 @@ export const WeeklyUpdatesView: React.FC = () => {
     loadQuestions();
   }, []);
 
+  const handleSyncLocalBank = async () => {
+    if (!confirm('Sync all 2,000+ local questions from FullQuestionBankData.ts to Supabase?')) {
+      return;
+    }
+
+    setIsSyncing(true);
+    setActionMsg('Uploading question bank chunks to Supabase...');
+
+    const result = await seedQuestionBank();
+
+    setIsSyncing(false);
+    if (result.success) {
+      setActionMsg(`Successfully uploaded ${result.count} questions into your database!`);
+      loadQuestions();
+      setTimeout(() => setActionMsg(null), 5000);
+    } else {
+      alert(`Seeding failed: ${result.error}`);
+      setActionMsg(null);
+    }
+  };
+
   const handleDeleteQuestion = async (id: string) => {
     if (!confirm('Are you sure you want to delete this question?')) return;
     try {
@@ -90,6 +113,7 @@ export const WeeklyUpdatesView: React.FC = () => {
         option_c: optionC,
         option_d: optionD,
         correct_option: correctOption,
+        correct_answer: correctOption,
         explanation,
       };
 
@@ -120,7 +144,7 @@ export const WeeklyUpdatesView: React.FC = () => {
 
   const filteredQuestions = questions.filter((q) => q.subject === selectedSubject);
 
-  // Subject Counts for Stats Banner
+  // Subject Counts for Metrics Banner
   const englishCount = questions.filter((q) => q.subject === 'Use of English').length;
   const mathCount = questions.filter((q) => q.subject === 'Mathematics').length;
   const physicsCount = questions.filter((q) => q.subject === 'Physics').length;
@@ -140,17 +164,16 @@ export const WeeklyUpdatesView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            onClick={() => setActiveTab('bank')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 ${
-              activeTab === 'bank'
-                ? 'bg-amber-500 text-slate-950 shadow-lg'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
-            }`}
+            onClick={handleSyncLocalBank}
+            disabled={isSyncing}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-lg transition flex items-center gap-2 disabled:opacity-50"
           >
-            <Database className="w-4 h-4" /> Question Bank
+            <Database className="w-4 h-4" />
+            {isSyncing ? 'Syncing...' : 'Sync Full Question Bank to DB'}
           </button>
+
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl shadow-lg transition flex items-center gap-2"
@@ -222,7 +245,9 @@ export const WeeklyUpdatesView: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Subject</label>
+              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                Subject
+              </label>
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
@@ -232,10 +257,19 @@ export const WeeklyUpdatesView: React.FC = () => {
                 <option value="Mathematics">Mathematics</option>
                 <option value="Physics">Physics</option>
                 <option value="Chemistry">Chemistry</option>
+                <option value="Biology">Biology</option>
+                <option value="Christian Religious Studies">Christian Religious Studies</option>
+                <option value="Government">Government</option>
+                <option value="Economics">Economics</option>
+                <option value="Commerce">Commerce</option>
+                <option value="Literature in English">Literature in English</option>
+                <option value="Principles of Accounts">Principles of Accounts</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Topic</label>
+              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                Topic
+              </label>
               <input
                 type="text"
                 required
@@ -320,7 +354,9 @@ export const WeeklyUpdatesView: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Correct Option</label>
+              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                Correct Option
+              </label>
               <select
                 value={correctOption}
                 onChange={(e) => setCorrectOption(e.target.value as any)}
@@ -333,7 +369,9 @@ export const WeeklyUpdatesView: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">Explanation</label>
+              <label className="block text-xs font-semibold uppercase text-slate-400 mb-1">
+                Explanation
+              </label>
               <input
                 type="text"
                 placeholder="Explanation for students..."
@@ -365,7 +403,14 @@ export const WeeklyUpdatesView: React.FC = () => {
           </h3>
 
           <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-            {['Use of English', 'Mathematics', 'Physics', 'Chemistry'].map((sub) => (
+            {[
+              'Use of English',
+              'Mathematics',
+              'Physics',
+              'Chemistry',
+              'Biology',
+              'Christian Religious Studies',
+            ].map((sub) => (
               <button
                 key={sub}
                 onClick={() => setSelectedSubject(sub)}
@@ -392,12 +437,15 @@ export const WeeklyUpdatesView: React.FC = () => {
           <div className="p-8 text-center text-slate-400 text-xs font-mono">Loading repository...</div>
         ) : filteredQuestions.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-xs font-mono">
-            No questions found for {selectedSubject}. Use the form above to add practice questions.
+            No questions found for {selectedSubject}. Click <strong>Sync Full Question Bank to DB</strong> or use the form to add questions.
           </div>
         ) : (
           <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
             {filteredQuestions.map((q, idx) => (
-              <div key={q.id || idx} className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+              <div
+                key={q.id || idx}
+                className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3"
+              >
                 <div className="flex justify-between items-center text-xs font-mono">
                   <span className="text-emerald-400 font-bold">
                     #{idx + 1} • {q.topic || 'General'}
@@ -426,14 +474,24 @@ export const WeeklyUpdatesView: React.FC = () => {
                 )}
 
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono text-slate-300">
-                  <div>A: <MathText text={q.option_a || ''} /></div>
-                  <div>B: <MathText text={q.option_b || ''} /></div>
-                  <div>C: <MathText text={q.option_c || ''} /></div>
-                  <div>D: <MathText text={q.option_d || ''} /></div>
+                  <div>
+                    A: <MathText text={q.option_a || ''} />
+                  </div>
+                  <div>
+                    B: <MathText text={q.option_b || ''} />
+                  </div>
+                  <div>
+                    C: <MathText text={q.option_c || ''} />
+                  </div>
+                  <div>
+                    D: <MathText text={q.option_d || ''} />
+                  </div>
                 </div>
 
                 <div className="pt-2 border-t border-slate-800/80 flex justify-between items-center text-xs">
-                  <span className="text-emerald-400 font-bold">Correct: Option {q.correct_option}</span>
+                  <span className="text-emerald-400 font-bold">
+                    Correct: Option {q.correct_option || q.correct_answer}
+                  </span>
                   {q.explanation && (
                     <span className="text-slate-500 text-[11px] truncate max-w-xs">
                       Exp: {q.explanation}

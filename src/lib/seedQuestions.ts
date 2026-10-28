@@ -15,36 +15,51 @@ export interface RawQuestionInput {
   examYear?: number;
 }
 
+// Fallback subject mapping if relational subjects table is used
+const SUBJECT_NAME_MAP: Record<string, string> = {
+  ENG: 'Use of English',
+  MTH: 'Mathematics',
+  PHY: 'Physics',
+  CHM: 'Chemistry',
+  BIO: 'Biology',
+  CRS: 'Christian Religious Studies',
+  GOV: 'Government',
+  ECO: 'Economics',
+  COM: 'Commerce',
+  LIT: 'Literature in English',
+  ACC: 'Principles of Accounts',
+};
+
 export async function seedQuestionBank(): Promise<{ success: boolean; count: number; error?: string }> {
   try {
-    // 1. Fetch active subject IDs from database
-    const { data: subjects, error: subError } = await supabase
-      .from('subjects')
-      .select('id, code');
-      
-    if (subError) throw subError;
+    console.log(`Starting migration of ${fullDocumentQuestions.length} past questions...`);
 
+    // 1. Fetch active subjects or map directly
+    const { data: dbSubjects } = await supabase.from('subjects').select('id, code, name');
     const subjectMap = new Map<string, string>();
-    subjects?.forEach((s) => subjectMap.set(s.code, s.id));
+    dbSubjects?.forEach((s) => subjectMap.set(s.code, s.id));
 
-    // 2. Format all extracted document questions
+    // 2. Format all extracted document questions with standard formatting
     const formattedQuestions = fullDocumentQuestions.map((q) => {
-      const subjectId = subjectMap.get(q.subjectCode);
-      if (!subjectId) {
-        throw new Error(`Subject code ${q.subjectCode} not found in database.`);
-      }
+      const fullSubjectName = SUBJECT_NAME_MAP[q.subjectCode] || q.subjectCode || 'General';
+      const subjectId = subjectMap.get(q.subjectCode) || null;
+
+      // Convert LaTeX \underline{...} to HTML <u>...</u> for Use of English
+      const cleanedQuestionText = q.questionText.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
 
       return {
-        subject_id: subjectId,
-        topic: q.topic,
-        question_text: q.questionText,
+        subject: fullSubjectName, // String fallback for simple schema
+        subject_id: subjectId,     // Relational ID if available
+        topic: q.topic || 'General Topic',
+        question_text: cleanedQuestionText,
         option_a: q.optionA,
         option_b: q.optionB,
         option_c: q.optionC,
         option_d: q.optionD,
         correct_answer: q.correctAnswer,
-        explanation: q.explanation || null,
-        difficulty_level: q.difficultyLevel,
+        correct_option: q.correctAnswer, // Dual compatibility
+        explanation: q.explanation || 'No detailed explanation provided.',
+        difficulty_level: q.difficultyLevel || 'medium',
         source_classification: 'verified_past_question',
         source_title: 'JAMB Full Practice Paper Document',
         exam_year: q.examYear || 2024,
@@ -53,20 +68,28 @@ export async function seedQuestionBank(): Promise<{ success: boolean; count: num
       };
     });
 
-    // 3. Insert into Supabase questions table
-    const { data, error } = await supabase
-      .from('questions')
-      .insert(formattedQuestions)
-      .select('id');
+    // 3. Batch Insert in Chunks of 100 to avoid Supabase limits
+    const chunkSize = 100;
+    let totalInserted = 0;
 
-    if (error) throw error;
+    for (let i = 0; i < formattedQuestions.length; i += chunkSize) {
+      const chunk = formattedQuestions.slice(i, i + chunkSize);
+      const { error } = await supabase.from('questions').insert(chunk);
 
-    return { success: true, count: data?.length || 0 };
+      if (error) {
+        console.error(`Error uploading chunk starting at index ${i}:`, error.message);
+      } else {
+        totalInserted += chunk.length;
+      }
+    }
+
+    return { success: true, count: totalInserted };
   } catch (err: any) {
-    return { 
-      success: false, 
-      count: 0, 
-      error: err.message || 'Failed to seed question bank.' 
+    console.error('Seeding exception:', err);
+    return {
+      success: false,
+      count: 0,
+      error: err.message || 'Failed to seed question bank.',
     };
   }
 }
