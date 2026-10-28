@@ -68,3 +68,16 @@ export interface ExamAttempt {
   percentage_score: number;
   created_at: string;
 }
+
+export interface RawQuestionInput {
+  subject: string;
+  topic: string;
+  question_text: string;
+  image_url?: string | null;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: string;
+  explanation: string;
+}

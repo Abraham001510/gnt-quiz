@@ -41,11 +41,13 @@ export async function seedQuestionBank(): Promise<{ success: boolean; count: num
 
     // 2. Format all extracted document questions with standard formatting
     const formattedQuestions = fullDocumentQuestions.map((q) => {
-      const fullSubjectName = SUBJECT_NAME_MAP[q.subjectCode] || q.subjectCode || 'General';
-      const subjectId = subjectMap.get(q.subjectCode) || null;
+      const subjectCode = typeof q.subjectCode === 'string' ? q.subjectCode : '';
+      const fullSubjectName = SUBJECT_NAME_MAP[subjectCode] || subjectCode || 'General';
+      const subjectId = subjectMap.get(subjectCode) || null;
 
       // Convert LaTeX \underline{...} to HTML <u>...</u> for Use of English
-      const cleanedQuestionText = q.questionText.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
+      const questionText = typeof q.questionText === 'string' ? q.questionText : '';
+      const cleanedQuestionText = questionText.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
 
       return {
         subject: fullSubjectName, // String fallback for simple schema
