@@ -15,8 +15,21 @@ import {
   BookOpen,
 } from 'lucide-react';
 
+const ALL_JAMB_SUBJECTS = [
+  'Use of English',
+  'Mathematics',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'Christian Religious Studies',
+  'Government',
+  'Economics',
+  'Commerce',
+  'Literature in English',
+  'Principles of Accounts',
+];
+
 export const WeeklyUpdatesView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'bank' | 'weekly'>('bank');
   const [questions, setQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState<string | null>(null);
@@ -120,7 +133,7 @@ export const WeeklyUpdatesView: React.FC = () => {
       const { error } = await supabase.from('questions').insert([payload]);
 
       if (!error) {
-        setActionMsg('New practice question added directly to Question Bank!');
+        setActionMsg(`New practice question for ${subject} added directly to Question Bank!`);
         setShowAddForm(false);
         setQuestionText('');
         setImageUrl('');
@@ -130,8 +143,9 @@ export const WeeklyUpdatesView: React.FC = () => {
         setOptionD('');
         setExplanation('');
         setTopic('');
+        setSelectedSubject(subject);
         loadQuestions();
-        setTimeout(() => setActionMsg(null), 3000);
+        setTimeout(() => setActionMsg(null), 4000);
       } else {
         alert(`Error inserting question: ${error.message}`);
       }
@@ -142,13 +156,9 @@ export const WeeklyUpdatesView: React.FC = () => {
     }
   };
 
-  const filteredQuestions = questions.filter((q) => q.subject === selectedSubject);
-
-  // Subject Counts for Metrics Banner
-  const englishCount = questions.filter((q) => q.subject === 'Use of English').length;
-  const mathCount = questions.filter((q) => q.subject === 'Mathematics').length;
-  const physicsCount = questions.filter((q) => q.subject === 'Physics').length;
-  const chemistryCount = questions.filter((q) => q.subject === 'Chemistry').length;
+  const filteredQuestions = questions.filter(
+    (q) => (q.subject || '').trim().toLowerCase() === selectedSubject.trim().toLowerCase()
+  );
 
   return (
     <div className="max-w-6xl mx-auto w-full space-y-6 text-slate-100 py-4 font-sans">
@@ -157,10 +167,10 @@ export const WeeklyUpdatesView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-amber-400" />
-            <h2 className="text-xl font-bold text-white">Administrative Portal & Question Bank</h2>
+            <h2 className="text-xl font-bold text-white">Centralized Question Bank Management</h2>
           </div>
           <p className="text-slate-400 text-xs mt-1">
-            Manage UTME question repositories, weekly updates, and diagram visual aids
+            Browse and manage questions across all 11 JAMB subjects with diagram & LaTeX support
           </p>
         </div>
 
@@ -190,49 +200,6 @@ export const WeeklyUpdatesView: React.FC = () => {
         </div>
       )}
 
-      {/* Repository Stats Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase">English</div>
-            <div className="text-lg font-bold text-white">{englishCount} Qs</div>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-3">
-          <div className="p-2.5 bg-sky-500/10 text-sky-400 rounded-lg">
-            <Database className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase">Mathematics</div>
-            <div className="text-lg font-bold text-white">{mathCount} Qs</div>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-3">
-          <div className="p-2.5 bg-amber-500/10 text-amber-400 rounded-lg">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase">Physics</div>
-            <div className="text-lg font-bold text-white">{physicsCount} Qs</div>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-3">
-          <div className="p-2.5 bg-rose-500/10 text-rose-400 rounded-lg">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-semibold text-slate-400 uppercase">Chemistry</div>
-            <div className="text-lg font-bold text-white">{chemistryCount} Qs</div>
-          </div>
-        </div>
-      </div>
-
       {/* Add New Question Form Overlay / Panel */}
       {showAddForm && (
         <form
@@ -253,17 +220,11 @@ export const WeeklyUpdatesView: React.FC = () => {
                 onChange={(e) => setSubject(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white outline-none"
               >
-                <option value="Use of English">Use of English</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Physics">Physics</option>
-                <option value="Chemistry">Chemistry</option>
-                <option value="Biology">Biology</option>
-                <option value="Christian Religious Studies">Christian Religious Studies</option>
-                <option value="Government">Government</option>
-                <option value="Economics">Economics</option>
-                <option value="Commerce">Commerce</option>
-                <option value="Literature in English">Literature in English</option>
-                <option value="Principles of Accounts">Principles of Accounts</option>
+                {ALL_JAMB_SUBJECTS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -273,7 +234,7 @@ export const WeeklyUpdatesView: React.FC = () => {
               <input
                 type="text"
                 required
-                placeholder="e.g. Lexis and Structure, Vectors"
+                placeholder="e.g. Lexis and Structure, Old Testament History"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white outline-none"
@@ -398,49 +359,56 @@ export const WeeklyUpdatesView: React.FC = () => {
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
             <span>Question Repository</span>
             <span className="text-xs font-mono bg-slate-800 px-2 py-0.5 rounded text-emerald-400">
-              {filteredQuestions.length} Items
+              Total Database: {questions.length} Items
             </span>
           </h3>
 
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-            {[
-              'Use of English',
-              'Mathematics',
-              'Physics',
-              'Chemistry',
-              'Biology',
-              'Christian Religious Studies',
-            ].map((sub) => (
+          <button
+            onClick={loadQuestions}
+            className="p-1.5 text-slate-400 hover:text-white transition flex items-center gap-1 text-xs font-mono"
+            title="Refresh Queue"
+          >
+            <RefreshCw className="w-4 h-4" /> Refresh Repository
+          </button>
+        </div>
+
+        {/* Complete 11 JAMB Subject Navigation Bar */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-slate-800">
+          {ALL_JAMB_SUBJECTS.map((sub) => {
+            const count = questions.filter(
+              (q) => (q.subject || '').trim().toLowerCase() === sub.trim().toLowerCase()
+            ).length;
+
+            return (
               <button
                 key={sub}
                 onClick={() => setSelectedSubject(sub)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap flex items-center gap-2 ${
                   selectedSubject === sub
                     ? 'bg-emerald-600 text-white shadow'
                     : 'bg-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
-                {sub}
+                <span>{sub}</span>
+                <span className="text-[10px] bg-slate-950 px-1.5 py-0.5 rounded text-slate-300 font-mono">
+                  {count}
+                </span>
               </button>
-            ))}
-            <button
-              onClick={loadQuestions}
-              className="p-1.5 text-slate-400 hover:text-white transition"
-              title="Refresh Queue"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-          </div>
+            );
+          })}
         </div>
 
         {loading ? (
           <div className="p-8 text-center text-slate-400 text-xs font-mono">Loading repository...</div>
         ) : filteredQuestions.length === 0 ? (
-          <div className="p-8 text-center text-slate-400 text-xs font-mono">
-            No questions found for {selectedSubject}. Click <strong>Sync Full Question Bank to DB</strong> or use the form to add questions.
+          <div className="p-8 text-center text-slate-400 text-xs font-mono space-y-2">
+            <p>No questions found under <strong>{selectedSubject}</strong>.</p>
+            <p className="text-slate-500">
+              Click <strong>Sync Full Question Bank to DB</strong> to load all 2,000+ past questions automatically from code.
+            </p>
           </div>
         ) : (
-          <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[550px] overflow-y-auto pr-1">
             {filteredQuestions.map((q, idx) => (
               <div
                 key={q.id || idx}
@@ -448,7 +416,7 @@ export const WeeklyUpdatesView: React.FC = () => {
               >
                 <div className="flex justify-between items-center text-xs font-mono">
                   <span className="text-emerald-400 font-bold">
-                    #{idx + 1} • {q.topic || 'General'}
+                    #{idx + 1} • {q.topic || 'General Topic'}
                   </span>
                   <button
                     onClick={() => handleDeleteQuestion(q.id)}
@@ -463,29 +431,22 @@ export const WeeklyUpdatesView: React.FC = () => {
                   <MathText text={q.question_text || ''} />
                 </div>
 
+                {/* Render Diagram / Image Preview if URL is present */}
                 {q.image_url && (
-                  <div className="p-2 bg-slate-900 border border-slate-800 rounded-lg max-w-xs">
+                  <div className="p-2 bg-slate-900 border border-slate-800 rounded-lg max-w-sm my-2">
                     <img
                       src={q.image_url}
                       alt="Question Diagram"
-                      className="rounded max-h-40 object-contain mx-auto"
+                      className="rounded max-h-48 object-contain mx-auto"
                     />
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2 text-xs font-mono text-slate-300">
-                  <div>
-                    A: <MathText text={q.option_a || ''} />
-                  </div>
-                  <div>
-                    B: <MathText text={q.option_b || ''} />
-                  </div>
-                  <div>
-                    C: <MathText text={q.option_c || ''} />
-                  </div>
-                  <div>
-                    D: <MathText text={q.option_d || ''} />
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono text-slate-300">
+                  <div>A: <MathText text={q.option_a || ''} /></div>
+                  <div>B: <MathText text={q.option_b || ''} /></div>
+                  <div>C: <MathText text={q.option_c || ''} /></div>
+                  <div>D: <MathText text={q.option_d || ''} /></div>
                 </div>
 
                 <div className="pt-2 border-t border-slate-800/80 flex justify-between items-center text-xs">
