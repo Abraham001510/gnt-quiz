@@ -23,6 +23,8 @@ export interface RawQuestionInput {
   difficulty_level?: string;
   examYear?: number;
   exam_year?: number;
+  section_instruction?: string;
+  passage_text?: string;
 }
 
 const SUBJECT_NAME_MAP: Record<string, string> = {
@@ -51,7 +53,7 @@ export async function seedQuestionBank(): Promise<{ success: boolean; count: num
       if (s.name) subjectMap.set(s.name, s.id);
     });
 
-    // 2. Format all questions with safe fallbacks for both camelCase and snake_case inputs
+    // 2. Format questions with automated sanitization for option_d leaks, passage extraction, and target word underlining
     const formattedQuestions = fullDocumentQuestions.map((q: any) => {
       const rawSubjectCode = typeof q.subjectCode === 'string' ? q.subjectCode : '';
       const rawSubjectName = typeof q.subject === 'string' ? q.subject : '';
@@ -68,20 +70,51 @@ export async function seedQuestionBank(): Promise<{ success: boolean; count: num
         subjectMap.get(fullSubjectName) ||
         null;
 
-      const rawQuestionText = q.questionText ?? q.question_text ?? '';
+      let rawOptionD = (q.optionD ?? q.option_d ?? 'Option D').toString();
+      let extractedPassage = q.passage_text || null;
+      let extractedInstruction = q.section_instruction || null;
+
+      // Clean out concatenated passages or section headers from option_d
+      if (rawOptionD.includes('Passage II') || rawOptionD.includes('Passage I')) {
+        const parts = rawOptionD.split(/(Passage I{1,3}.*)/s);
+        rawOptionD = parts[0].trim();
+        if (!extractedPassage) {
+          extractedPassage = parts.slice(1).join('').trim();
+        }
+      }
+
+      if (rawOptionD.includes('SECTION')) {
+        const parts = rawOptionD.split(/(SECTION [A-Z]:.*)/s);
+        rawOptionD = parts[0].trim();
+        if (!extractedInstruction) {
+          extractedInstruction = parts.slice(1).join('').trim();
+        }
+      }
+
+      // Automatically wrap target vocabulary words in <u> tags if missing
+      let rawQuestionText = (q.questionText ?? q.question_text ?? '').toString();
+      if (!rawQuestionText.includes('<u>')) {
+        const targetWords = ['platitudes', 'ratified', 'laconic', 'magnanimous', 'ephemeral', 'trite'];
+        targetWords.forEach((word) => {
+          const reg = new RegExp(`\\b(${word})\\b`, 'gi');
+          rawQuestionText = rawQuestionText.replace(reg, '<u>$1</u>');
+        });
+      }
+
       const cleanedQuestionText = rawQuestionText.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
 
       return {
         subject: fullSubjectName,
         subject_id: subjectId,
         topic: q.topic || 'General Topic',
+        section_instruction: extractedInstruction,
+        passage_text: extractedPassage,
         question_text: cleanedQuestionText,
         image_url: q.image_url || null,
-        // Safe fallbacks to prevent "null value in column option_a" violations
         option_a: q.optionA ?? q.option_a ?? 'Option A',
         option_b: q.optionB ?? q.option_b ?? 'Option B',
         option_c: q.optionC ?? q.option_c ?? 'Option C',
-        option_d: q.optionD ?? q.option_d ?? 'Option D',
+        option_d: rawOptionD || 'Option D',
         correct_option: q.correctAnswer ?? q.correct_option ?? 'A',
         explanation: q.explanation || 'No detailed explanation provided.',
         difficulty_level: q.difficultyLevel ?? q.difficulty_level ?? 'medium',
@@ -93,7 +126,7 @@ export async function seedQuestionBank(): Promise<{ success: boolean; count: num
       };
     });
 
-    // 3. Batch Insert in Chunks of 100 to avoid request size limits
+    // 3. Batch Insert in Chunks of 100
     const chunkSize = 100;
     let totalInserted = 0;
 
