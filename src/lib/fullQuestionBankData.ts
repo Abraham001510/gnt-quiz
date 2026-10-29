@@ -1832,7 +1832,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
     option_a: 'has changed his mind about education',
     option_b: 'regrets sending his children to school',
     option_c: 'opposes the cooperative',
-    option_d: 'wants the village to remain unchanged Passage II Critics of the modern classroom often lament that pupils no longer read for pleasure. The charge is not entirely unfounded: a survey of secondary schools in three states revealed that fewer than one pupil in five had finished a novel in the previous year. But to blame the smartphone alone is to mistake a symptom for the disease. In many communities, a public library is a distant memory, and a new storybook costs more than a week\'s feeding allowance. Where books are scarce, the appetite for them cannot flourish. Moreover, teachers who themselves seldom read are poorly placed to inspire the habit in others. Until governments restock libraries and schools reward curiosity rather than mere cramming, exhortations to read will remain empty slogans. Nevertheless, there are encouraging signs. Several community reading clubs, run by volunteers at weekends, have attracted hundreds of children who were previously indifferent to the printed page.',
+    option_d: 'wants the village to remain unchanged',
     correct_option: 'A',
     explanation: 'The correct answer is Option A.'
   },
@@ -1887,7 +1887,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
     option_a: 'bitterly resentful',
     option_b: 'scornful',
     option_c: 'cautiously hopeful',
-    option_d: 'indifferent Passage Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly, as the migration of human attention onto screens. The merchants of this new economy, having discovered that a person\'s undivided gaze can be bartered like grain, devote prodigious ingenuity to prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is compelled to look, and that technology merely gratifies preferences it did not create. The retort is superficially persuasive but ethically evasive. A preference manufactured by design is not the same as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot plead the innocence of mere service. None of this, however, justifies the fatalism that often accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic form recollection supplies, but the political will to insist that human attention, like human labour, is not a commodity to be extracted without limit.',
+    option_d: 'indifferent',
     correct_option: 'C',
     explanation: 'The correct answer is Option C.'
   },
@@ -1975,7 +1975,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
     option_a: 'the labelling of food for export',
     option_b: 'the adding of nutrients to food',
     option_c: 'the contamination of food with inferior or harmful substances',
-    option_d: 'the sale of food at a high price SECTION B: LEXIS AND STRUCTURE Choose the option that best completes each sentence.',
+    option_d: 'the sale of food at a high price',
     correct_option: 'C',
     explanation: 'The correct answer is Option C.'
   },
@@ -2173,7 +2173,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
     option_a: 'whose',
     option_b: 'whom',
     option_c: 'who',
-    option_d: 'which SECTION C: SYNONYMS AND ANTONYMS Questions 37 to 44: choose the option nearest in meaning to the underlined word. Questions 45 to 52: choose the option opposite in meaning to the underlined word.',
+    option_d: 'which.',
     correct_option: 'B',
     explanation: 'The correct answer is Option B.'
   },
