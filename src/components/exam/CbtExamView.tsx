@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { saveStudentAnswer } from '../../lib/examEngineService';
+import { saveStudentAnswer, finalizeAndGradeAttempt } from '../../lib/examEngineService';
 import { MathText } from '../common/MathText';
 import { Clock, ChevronLeft, ChevronRight, FileText, BookOpen } from 'lucide-react';
 
@@ -15,8 +15,8 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
   const [activeSubject, setActiveSubject] = useState<string>('Use of English');
   const [currentSubjectIndex, setCurrentSubjectIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
-  
-  // Set explicit 2 Hours (120 Minutes) timer
+
+  // 120 Minutes (2 Hours) Examination Timer
   const [deadlineAt] = useState<Date>(() => new Date(Date.now() + 120 * 60 * 1000));
   const [timeLeftStr, setTimeLeftStr] = useState<string>('120:00');
   const [isWarningFive, setIsWarningFive] = useState(false);
@@ -30,13 +30,40 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       try {
         setLoading(true);
 
+        // 1. Fetch attempt details to get candidate selected_subject_ids
+        const { data: attemptData, error: attemptErr } = await supabase
+          .from('exam_attempts')
+          .select('selected_subject_ids')
+          .eq('id', attemptId)
+          .single();
+
+        if (attemptErr || !attemptData) {
+          console.error('Error fetching attempt details:', attemptErr);
+        }
+
+        // 2. Fetch active subjects matching those IDs to resolve subject names
+        const selectedSubjectIds: string[] = attemptData?.selected_subject_ids || [];
+        let chosenSubjectNames: string[] = ['Use of English'];
+
+        if (selectedSubjectIds.length > 0) {
+          const { data: matchedSubjects } = await supabase
+            .from('subjects')
+            .select('name')
+            .in('id', selectedSubjectIds);
+
+          if (matchedSubjects && matchedSubjects.length > 0) {
+            chosenSubjectNames = matchedSubjects.map((s) => s.name);
+          }
+        }
+
+        // 3. Fetch questions strictly belonging ONLY to the chosen subjects
         const { data: dbQuestions, error } = await supabase
           .from('questions')
           .select('*')
+          .in('subject', chosenSubjectNames)
           .order('id', { ascending: true });
 
         if (!error && dbQuestions && dbQuestions.length > 0 && mounted) {
-          // Group questions strictly by subject
           const grouped: Record<string, any[]> = {};
 
           dbQuestions.forEach((q) => {
@@ -45,10 +72,18 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
             grouped[sub].push(q);
           });
 
-          // Enforce JAMB quotas: 60 English, 40 for others
+          // Enforce JAMB quotas: 60 English, 40 for each chosen departmental subject
           const formattedGrouped: Record<string, any[]> = {};
-          Object.keys(grouped).forEach((sub) => {
-            const quota = sub === 'Use of English' ? 60 : 40;
+
+          const sortedSubjectKeys = Object.keys(grouped).sort((a, b) => {
+            if (a.toLowerCase().includes('english')) return -1;
+            if (b.toLowerCase().includes('english')) return 1;
+            return a.localeCompare(b);
+          });
+
+          sortedSubjectKeys.forEach((sub) => {
+            const isEnglish = sub.toLowerCase().includes('english');
+            const quota = isEnglish ? 60 : 40;
             formattedGrouped[sub] = grouped[sub].slice(0, quota);
           });
 
@@ -60,7 +95,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           }
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
+        console.error('Error initializing exam questions:', err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -73,7 +108,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     };
   }, [attemptId]);
 
-  // Synchronized 2-Hour Timer Engine
+  // Synchronized 120-Minute Countdown Timer
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -105,14 +140,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     setSubmitting(true);
 
     try {
-      await supabase
-        .from('exam_attempts')
-        .update({
-          submitted_at: new Date().toISOString(),
-          submission_reason: reason,
-          is_finalized: true,
-        })
-        .eq('id', attemptId);
+      await finalizeAndGradeAttempt(attemptId, reason);
     } catch (e) {
       console.warn('Finalized locally.');
     }
@@ -120,17 +148,17 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     onFinalizeExam();
   };
 
-  // Anti-Cheat Proctoring: Auto-submit if student leaves tab or minimizes browser
+  // Anti-Cheat Proctoring: Auto-submit on tab switch, window minimization, or blur
   useEffect(() => {
     const handleAntiCheatViolation = () => {
       if (document.hidden || document.visibilityState === 'hidden') {
-        console.warn('Anti-cheat triggered: Tab switched or browser minimized.');
+        console.warn('Anti-cheat triggered: Candidate switched tabs or minimized browser.');
         handleFinalize('auto_submit_tab_switch');
       }
     };
 
     const handleWindowBlur = () => {
-      console.warn('Anti-cheat triggered: Browser window lost focus.');
+      console.warn('Anti-cheat triggered: Browser lost window focus.');
       handleFinalize('auto_submit_window_blur');
     };
 
@@ -146,7 +174,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
   const activeQuestions = questionsBySubject[activeSubject] || [];
   const currentQuestion = activeQuestions[currentSubjectIndex];
 
-  // Calculate total questions across all subjects
   const totalExamQuestions = Object.values(questionsBySubject).reduce(
     (sum, list) => sum + list.length,
     0
@@ -168,12 +195,11 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-mono text-sm gap-3">
         <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400">Setting up JAMB CBT Examination Workspace...</p>
+        <p className="text-slate-400">Loading Examination Workspace & Questions...</p>
       </div>
     );
   }
 
-  // Helper: Strips any leading "Subject Question XX:" prefixes if present in DB text
   const cleanQuestionText = (text: string) => {
     return text.replace(/^(English|Mathematics|Physics|Chemistry)\s+Question\s+\d+:\s*/i, '');
   };
@@ -199,7 +225,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           </div>
         </div>
 
-        {/* Timer Box (120:00) */}
+        {/* Timer Banner */}
         <div
           className={`flex items-center gap-2 px-4 py-1.5 rounded-xl border font-mono text-base font-bold ${
             isWarningFive
@@ -220,9 +246,9 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
         </button>
       </header>
 
-      {/* Main Examination Workspace */}
+      {/* Main Workspace */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-4">
-        {/* Subject Navigation Tabs */}
+        {/* Subject Navigation Bar */}
         <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 overflow-x-auto">
           {subjectsList.map((sub) => {
             const count = (questionsBySubject[sub] || []).length;
@@ -248,7 +274,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           })}
         </div>
 
-        {/* Section Instruction Banner (If Available) */}
+        {/* Section Directive Banner */}
         {currentQuestion.section_instruction && (
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-emerald-300 text-xs sm:text-sm font-medium leading-relaxed flex items-start gap-3 shadow-md">
             <BookOpen className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
@@ -261,10 +287,9 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           </div>
         )}
 
-        {/* Dynamic Grid: Split view when Passage exists */}
+        {/* Dynamic Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* Comprehension Passage Panel (Left Column - Spans 5 cols if present) */}
+          {/* Passage Column (if present) */}
           {hasPassage && (
             <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 sticky top-20 max-h-[72vh] overflow-y-auto shadow-xl">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-800 text-emerald-400 font-bold text-xs uppercase tracking-wider">
@@ -277,7 +302,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
             </div>
           )}
 
-          {/* Question & Options Panel (Right Column - Spans 4 or 3 cols based on passage) */}
+          {/* Question & Options Area */}
           <div className={`${hasPassage ? 'lg:col-span-4' : 'lg:col-span-3'} space-y-4`}>
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
               <div className="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -289,7 +314,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                 </span>
               </div>
 
-              {/* Question Text rendering with HTML tag support (for <u> target words) */}
+              {/* Question Text */}
               <div className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
                 {formattedText.includes('<u>') || formattedText.includes('<b>') ? (
                   <div
@@ -301,7 +326,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                 )}
               </div>
 
-              {/* Diagram Rendering (if available) */}
+              {/* Diagram / Image */}
               {currentQuestion.image_url && (
                 <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl my-3 flex justify-center">
                   <img
@@ -312,7 +337,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                 </div>
               )}
 
-              {/* Options */}
+              {/* Options list */}
               <div className="space-y-3 font-mono text-sm pt-2">
                 {(['A', 'B', 'C', 'D'] as const).map((opt) => {
                   const optKey = `option_${opt.toLowerCase()}`;
@@ -345,7 +370,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                 })}
               </div>
 
-              {/* Bottom Nav Controls */}
+              {/* Navigation Controls */}
               <div className="flex justify-between items-center pt-4 border-t border-slate-800">
                 <button
                   disabled={currentSubjectIndex === 0}
@@ -370,7 +395,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
             </div>
           </div>
 
-          {/* Question Palette / Grid Panel (Right Column - Spans 3 cols) */}
+          {/* Question Palette Grid */}
           <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 sticky top-20">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800">
               {activeSubject} Grid (1 - {activeQuestions.length})
@@ -399,7 +424,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
               })}
             </div>
           </div>
-
         </div>
       </div>
     </div>
