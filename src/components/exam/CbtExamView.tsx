@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { saveStudentAnswer, finalizeAndGradeAttempt } from '../../lib/examEngineService';
 import { MathText } from '../common/MathText';
-import { Clock, ChevronLeft, ChevronRight, FileText, BookOpen } from 'lucide-react';
+import { Clock, ChevronLeft, ChevronRight, FileText, BookOpen, CheckCircle2 } from 'lucide-react';
 
 interface CbtExamProps {
   attemptId: string;
@@ -16,12 +16,12 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
   const [currentSubjectIndex, setCurrentSubjectIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
 
-  // 120 Minutes Timer
   const [deadlineAt] = useState<Date>(() => new Date(Date.now() + 120 * 60 * 1000));
   const [timeLeftStr, setTimeLeftStr] = useState<string>('120:00');
   const [isWarningFive, setIsWarningFive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -30,69 +30,50 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       try {
         setLoading(true);
 
-        // 1. Get attempt record to obtain selected_subject_ids
-        const { data: attemptData, error: attemptErr } = await supabase
+        // 1. Fetch attempt record
+        const { data: attemptData } = await supabase
           .from('exam_attempts')
           .select('selected_subject_ids')
           .eq('id', attemptId)
           .single();
 
-        if (attemptErr || !attemptData) {
-          console.error('Error fetching attempt details:', attemptErr);
-        }
-
         const selectedSubjectIds: string[] = attemptData?.selected_subject_ids || [];
 
-        // 2. Query matching subjects from DB using IDs
-        let chosenSubjectObjects: { id: string; name: string }[] = [];
+        // 2. Map UUIDs to real Subject Names
+        let chosenNames: string[] = ['Use of English'];
         if (selectedSubjectIds.length > 0) {
           const { data: matchedSubjects } = await supabase
             .from('subjects')
-            .select('id, name')
+            .select('name')
             .in('id', selectedSubjectIds);
 
-          if (matchedSubjects) {
-            chosenSubjectObjects = matchedSubjects;
+          if (matchedSubjects && matchedSubjects.length > 0) {
+            chosenNames = matchedSubjects.map((s) => s.name);
           }
         }
 
-        const chosenSubjectNames = chosenSubjectObjects.map((s) => s.name);
-
-        // 3. Fetch questions matching any of the chosen subject names OR subject IDs
-        const { data: dbQuestions, error } = await supabase
+        // 3. Fetch questions matching ANY of the chosen subject names
+        const { data: dbQuestions } = await supabase
           .from('questions')
           .select('*')
-          .or(
-            chosenSubjectNames.length > 0
-              ? `subject.in.(${chosenSubjectNames.map((n) => `"${n}"`).join(',')})`
-              : 'subject.ilike.%english%'
-          )
           .order('id', { ascending: true });
 
-        // Fallback: If OR syntax yields empty, fetch all active questions and filter manually
-        let finalQuestions = dbQuestions || [];
-        if (!finalQuestions.length) {
-          const { data: fallbackQuestions } = await supabase.from('questions').select('*');
-          if (fallbackQuestions) {
-            finalQuestions = fallbackQuestions.filter((q) =>
-              chosenSubjectNames.some(
-                (name) => name.toLowerCase().trim() === (q.subject || '').toLowerCase().trim()
-              )
-            );
-          }
-        }
+        if (dbQuestions && mounted) {
+          // Filter strictly by candidate chosen names
+          const filtered = dbQuestions.filter((q) =>
+            chosenNames.some(
+              (name) => name.toLowerCase().trim() === (q.subject || '').toLowerCase().trim()
+            )
+          );
 
-        if (finalQuestions.length > 0 && mounted) {
           const grouped: Record<string, any[]> = {};
-
-          finalQuestions.forEach((q) => {
+          (filtered.length > 0 ? filtered : dbQuestions).forEach((q) => {
             const sub = q.subject || 'Use of English';
             if (!grouped[sub]) grouped[sub] = [];
             grouped[sub].push(q);
           });
 
           const formattedGrouped: Record<string, any[]> = {};
-
           const sortedSubjectKeys = Object.keys(grouped).sort((a, b) => {
             if (a.toLowerCase().includes('english')) return -1;
             if (b.toLowerCase().includes('english')) return 1;
@@ -108,25 +89,21 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           setQuestionsBySubject(formattedGrouped);
           const subs = Object.keys(formattedGrouped);
           setSubjectsList(subs);
-          if (subs.length > 0) {
-            setActiveSubject(subs[0]);
-          }
+          if (subs.length > 0) setActiveSubject(subs[0]);
         }
       } catch (err) {
-        console.error('Error initializing exam questions:', err);
+        console.error('Error fetching questions:', err);
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
     initExam();
-
     return () => {
       mounted = false;
     };
   }, [attemptId]);
 
-  // Synchronized Timer
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -154,53 +131,58 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
   }, [deadlineAt]);
 
   const handleFinalize = async (reason = 'manual_submit') => {
-    if (submitting) return;
+    if (submitting || isSubmitted) return;
     setSubmitting(true);
 
-    try {
-      await finalizeAndGradeAttempt(attemptId, reason);
-    } catch (e) {
-      console.warn('Finalized locally.');
-    }
-
-    onFinalizeExam();
+    await finalizeAndGradeAttempt(attemptId, reason);
+    setSubmitting(false);
+    setIsSubmitted(true);
   };
 
-  // Anti-Cheat Proctoring: Tab-Switch, Blur, AND Window/Tab Closure Detection
   useEffect(() => {
     const handleAntiCheatViolation = () => {
       if (document.hidden || document.visibilityState === 'hidden') {
-        console.warn('Anti-cheat triggered: Tab switched or minimized.');
         handleFinalize('auto_submit_tab_switch');
       }
     };
 
     const handleWindowBlur = () => {
-      console.warn('Anti-cheat triggered: Window lost focus.');
       handleFinalize('auto_submit_window_blur');
-    };
-
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Auto-submit immediately if user attempts to close or refresh page
-      handleFinalize('auto_submit_browser_closed');
-      e.preventDefault();
-      e.returnValue = '';
     };
 
     document.addEventListener('visibilitychange', handleAntiCheatViolation);
     window.addEventListener('blur', handleWindowBlur);
-    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       document.removeEventListener('visibilitychange', handleAntiCheatViolation);
       window.removeEventListener('blur', handleWindowBlur);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [submitting, attemptId]);
+  }, [submitting, isSubmitted, attemptId]);
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center text-slate-100">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md space-y-4 shadow-2xl">
+          <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Examination Submitted Successfully</h2>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            Your answers have been securely recorded in the portal database. Results will be published by the administrator.
+          </p>
+          <button
+            onClick={onFinalizeExam}
+            className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition"
+          >
+            Return to Portal Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const activeQuestions = questionsBySubject[activeSubject] || [];
   const currentQuestion = activeQuestions[currentSubjectIndex];
-
   const totalExamQuestions = Object.values(questionsBySubject).reduce(
     (sum, list) => sum + list.length,
     0
@@ -210,33 +192,26 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     if (!currentQuestion) return;
     const qId = currentQuestion.id;
     setAnswers((prev) => ({ ...prev, [qId]: option }));
-
-    try {
-      await saveStudentAnswer(attemptId, qId, option);
-    } catch (e) {
-      console.warn('Answer saved locally.');
-    }
+    await saveStudentAnswer(attemptId, qId, option);
   };
 
   if (loading || !currentQuestion) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-mono text-sm gap-3">
         <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 font-mono">Loading Examination Workspace & Subjects...</p>
+        <p className="text-slate-400 font-mono">Loading Examination Workspace & Questions...</p>
       </div>
     );
   }
 
-  const cleanQuestionText = (text: string) => {
-    return text.replace(/^(English|Mathematics|Physics|Chemistry)\s+Question\s+\d+:\s*/i, '');
-  };
-
-  const formattedText = cleanQuestionText(currentQuestion.question_text || '');
+  const formattedText = (currentQuestion.question_text || '').replace(
+    /^(English|Mathematics|Physics|Chemistry)\s+Question\s+\d+:\s*/i,
+    ''
+  );
   const hasPassage = !!currentQuestion.passage_text;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
-      {/* Top Header */}
       <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex items-center justify-between sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center font-black text-white text-base">
@@ -252,7 +227,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           </div>
         </div>
 
-        {/* Timer Box */}
         <div
           className={`flex items-center gap-2 px-4 py-1.5 rounded-xl border font-mono text-base font-bold ${
             isWarningFive
@@ -273,9 +247,8 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
         </button>
       </header>
 
-      {/* Main Examination Workspace */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-4">
-        {/* Subject Navigation Bar (Shows all 4 chosen subjects) */}
+        {/* Subject Nav showing all chosen subjects */}
         <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 overflow-x-auto">
           {subjectsList.map((sub) => {
             const count = (questionsBySubject[sub] || []).length;
@@ -301,7 +274,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           })}
         </div>
 
-        {/* Section Instruction Banner */}
         {currentQuestion.section_instruction && (
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-emerald-300 text-xs sm:text-sm font-medium leading-relaxed flex items-start gap-3 shadow-md">
             <BookOpen className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
@@ -314,9 +286,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           </div>
         )}
 
-        {/* Dynamic Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Passage Column */}
           {hasPassage && (
             <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 sticky top-20 max-h-[72vh] overflow-y-auto shadow-xl">
               <div className="flex items-center gap-2 pb-3 border-b border-slate-800 text-emerald-400 font-bold text-xs uppercase tracking-wider">
@@ -329,7 +299,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
             </div>
           )}
 
-          {/* Question & Options Panel */}
           <div className={`${hasPassage ? 'lg:col-span-4' : 'lg:col-span-3'} space-y-4`}>
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
               <div className="flex justify-between items-center pb-3 border-b border-slate-800">
@@ -341,7 +310,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                 </span>
               </div>
 
-              {/* Question Text */}
               <div className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
                 {formattedText.includes('<u>') || formattedText.includes('<b>') ? (
                   <div
@@ -353,18 +321,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                 )}
               </div>
 
-              {/* Image Diagram */}
-              {currentQuestion.image_url && (
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl my-3 flex justify-center">
-                  <img
-                    src={currentQuestion.image_url}
-                    alt="Question Diagram"
-                    className="max-h-64 object-contain rounded-lg border border-slate-800 shadow-md"
-                  />
-                </div>
-              )}
-
-              {/* Options */}
               <div className="space-y-3 font-mono text-sm pt-2">
                 {(['A', 'B', 'C', 'D'] as const).map((opt) => {
                   const optKey = `option_${opt.toLowerCase()}`;
@@ -397,7 +353,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
                 })}
               </div>
 
-              {/* Bottom Nav */}
               <div className="flex justify-between items-center pt-4 border-t border-slate-800">
                 <button
                   disabled={currentSubjectIndex === 0}
@@ -422,7 +377,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
             </div>
           </div>
 
-          {/* Question Palette Grid */}
           <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 sticky top-20">
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800">
               {activeSubject} Grid (1 - {activeQuestions.length})
