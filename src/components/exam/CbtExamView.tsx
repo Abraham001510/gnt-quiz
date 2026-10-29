@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { saveStudentAnswer } from '../../lib/examEngineService';
 import { MathText } from '../common/MathText';
-import { Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Clock, ChevronLeft, ChevronRight, FileText, BookOpen } from 'lucide-react';
 
 interface CbtExamProps {
   attemptId: string;
@@ -150,10 +150,13 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     );
   }
 
-  // Clean helper: Strips any leading "Subject Question XX:" prefixes if present in DB text
+  // Helper: Strips any leading "Subject Question XX:" prefixes if present in DB text
   const cleanQuestionText = (text: string) => {
     return text.replace(/^(English|Mathematics|Physics|Chemistry)\s+Question\s+\d+:\s*/i, '');
   };
+
+  const formattedText = cleanQuestionText(currentQuestion.question_text || '');
+  const hasPassage = !!currentQuestion.passage_text;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none">
@@ -195,148 +198,185 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       </header>
 
       {/* Main Examination Workspace */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Column: Question Screen */}
-        <div className="lg:col-span-3 space-y-4">
-          {/* Subject Tabs */}
-          <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 overflow-x-auto">
-            {subjectsList.map((sub) => {
-              const count = (questionsBySubject[sub] || []).length;
-              return (
-                <button
-                  key={sub}
-                  onClick={() => {
-                    setActiveSubject(sub);
-                    setCurrentSubjectIndex(0);
-                  }}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-2 ${
-                    activeSubject === sub
-                      ? 'bg-emerald-600 text-white shadow'
-                      : 'bg-slate-800 text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <span>{sub}</span>
-                  <span className="text-[10px] bg-slate-950 px-1.5 py-0.5 rounded text-slate-300">
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-4">
+        {/* Subject Navigation Tabs */}
+        <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 overflow-x-auto">
+          {subjectsList.map((sub) => {
+            const count = (questionsBySubject[sub] || []).length;
+            return (
+              <button
+                key={sub}
+                onClick={() => {
+                  setActiveSubject(sub);
+                  setCurrentSubjectIndex(0);
+                }}
+                className={`px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition flex items-center gap-2 ${
+                  activeSubject === sub
+                    ? 'bg-emerald-600 text-white shadow'
+                    : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <span>{sub}</span>
+                <span className="text-[10px] bg-slate-950 px-1.5 py-0.5 rounded text-slate-300">
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Section Instruction Banner (If Available) */}
+        {currentQuestion.section_instruction && (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-emerald-300 text-xs sm:text-sm font-medium leading-relaxed flex items-start gap-3 shadow-md">
+            <BookOpen className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="block text-emerald-400 font-bold mb-0.5 uppercase tracking-wider text-[11px]">
+                Section Instruction
+              </strong>
+              <span>{currentQuestion.section_instruction}</span>
+            </div>
           </div>
+        )}
 
-          {/* Question Display Card */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-              <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
-                {activeSubject}: Question {currentSubjectIndex + 1} of {activeQuestions.length}
-              </span>
-              <span className="text-xs font-mono bg-slate-800 px-2.5 py-1 rounded text-slate-400">
-                Total Exam: {totalExamQuestions} Questions
-              </span>
-            </div>
-
-            {/* Clean Question Text */}
-            <div className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
-              <MathText text={cleanQuestionText(currentQuestion.question_text || '')} />
-            </div>
-
-            {/* Diagram Rendering (if available) */}
-            {currentQuestion.image_url && (
-              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl my-3 flex justify-center">
-                <img
-                  src={currentQuestion.image_url}
-                  alt="Question Diagram"
-                  className="max-h-64 object-contain rounded-lg border border-slate-800 shadow-md"
-                />
+        {/* Dynamic Grid: Split view when Passage exists */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* Comprehension Passage Panel (Left Column - Spans 5 cols if present) */}
+          {hasPassage && (
+            <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 sticky top-20 max-h-[72vh] overflow-y-auto shadow-xl">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-800 text-emerald-400 font-bold text-xs uppercase tracking-wider">
+                <FileText className="w-4 h-4" />
+                <span>Reading Passage</span>
               </div>
-            )}
+              <div className="text-slate-200 text-sm leading-relaxed whitespace-pre-line font-serif pr-1">
+                {currentQuestion.passage_text}
+              </div>
+            </div>
+          )}
 
-            {/* Options */}
-            <div className="space-y-3 font-mono text-sm pt-2">
-              {(['A', 'B', 'C', 'D'] as const).map((opt) => {
-                const optKey = `option_${opt.toLowerCase()}`;
-                const optionText = currentQuestion[optKey] || '';
-                const isSelected = answers[currentQuestion.id] === opt;
-                return (
-                  <button
-                    key={opt}
-                    onClick={() => handleSelectOption(opt)}
-                    className={`w-full p-4 rounded-xl border text-left flex items-center gap-3 transition ${
-                      isSelected
-                        ? 'bg-emerald-950/60 border-emerald-500 text-emerald-200 shadow-md'
-                        : 'bg-slate-800/80 border-slate-700/80 text-slate-300 hover:bg-slate-800'
-                    }`}
-                  >
-                    <span
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+          {/* Question & Options Panel (Right Column - Spans 7 or 9 cols based on passage) */}
+          <div className={`${hasPassage ? 'lg:col-span-4' : 'lg:col-span-3'} space-y-4`}>
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+              <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+                <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                  {activeSubject}: Question {currentSubjectIndex + 1} of {activeQuestions.length}
+                </span>
+                <span className="text-xs font-mono bg-slate-800 px-2.5 py-1 rounded text-slate-400">
+                  Total Exam: {totalExamQuestions} Qs
+                </span>
+              </div>
+
+              {/* Question Text rendering with HTML tag support (for <u> target words) */}
+              <div className="text-base sm:text-lg font-medium text-slate-100 leading-relaxed">
+                {formattedText.includes('<u>') || formattedText.includes('<b>') ? (
+                  <div
+                    dangerouslySetInnerHTML={{ __html: formattedText }}
+                    className="[&>u]:text-emerald-400 [&>u]:font-bold [&>u]:no-underline [&>u]:border-b-2 [&>u]:border-emerald-400"
+                  />
+                ) : (
+                  <MathText text={formattedText} />
+                )}
+              </div>
+
+              {/* Diagram Rendering (if available) */}
+              {currentQuestion.image_url && (
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl my-3 flex justify-center">
+                  <img
+                    src={currentQuestion.image_url}
+                    alt="Question Diagram"
+                    className="max-h-64 object-contain rounded-lg border border-slate-800 shadow-md"
+                  />
+                </div>
+              )}
+
+              {/* Options */}
+              <div className="space-y-3 font-mono text-sm pt-2">
+                {(['A', 'B', 'C', 'D'] as const).map((opt) => {
+                  const optKey = `option_${opt.toLowerCase()}`;
+                  const optionText = currentQuestion[optKey] || '';
+                  const isSelected = answers[currentQuestion.id] === opt;
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() => handleSelectOption(opt)}
+                      className={`w-full p-4 rounded-xl border text-left flex items-center gap-3 transition ${
                         isSelected
-                          ? 'bg-emerald-500 text-slate-950'
-                          : 'bg-slate-900 text-slate-400'
+                          ? 'bg-emerald-950/60 border-emerald-500 text-emerald-200 shadow-md'
+                          : 'bg-slate-800/80 border-slate-700/80 text-slate-300 hover:bg-slate-800'
                       }`}
                     >
-                      {opt}
-                    </span>
-                    <span>
-                      <MathText text={optionText} />
-                    </span>
+                      <span
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                          isSelected
+                            ? 'bg-emerald-500 text-slate-950'
+                            : 'bg-slate-900 text-slate-400'
+                        }`}
+                      >
+                        {opt}
+                      </span>
+                      <span>
+                        <MathText text={optionText} />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Nav Controls */}
+              <div className="flex justify-between items-center pt-4 border-t border-slate-800">
+                <button
+                  disabled={currentSubjectIndex === 0}
+                  onClick={() => setCurrentSubjectIndex((prev) => Math.max(0, prev - 1))}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Previous
+                </button>
+
+                <button
+                  disabled={currentSubjectIndex === activeQuestions.length - 1}
+                  onClick={() =>
+                    setCurrentSubjectIndex((prev) =>
+                      Math.min(activeQuestions.length - 1, prev + 1)
+                    )
+                  }
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1"
+                >
+                  Next <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Question Palette / Grid Panel (Right Column - Spans 3 cols) */}
+          <div className="lg:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 sticky top-20">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800">
+              {activeSubject} Grid (1 - {activeQuestions.length})
+            </h4>
+
+            <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto pr-1">
+              {activeQuestions.map((q, idx) => {
+                const isAnswered = !!answers[q.id];
+                const isCurrent = idx === currentSubjectIndex;
+
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentSubjectIndex(idx)}
+                    className={`h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center ${
+                      isCurrent
+                        ? 'ring-2 ring-emerald-400 bg-emerald-600 text-white'
+                        : isAnswered
+                        ? 'bg-emerald-950 border border-emerald-500/50 text-emerald-300'
+                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                    }`}
+                  >
+                    {idx + 1}
                   </button>
                 );
               })}
             </div>
-
-            {/* Bottom Nav Controls */}
-            <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-              <button
-                disabled={currentSubjectIndex === 0}
-                onClick={() => setCurrentSubjectIndex((prev) => Math.max(0, prev - 1))}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1"
-              >
-                <ChevronLeft className="w-4 h-4" /> Previous
-              </button>
-
-              <button
-                disabled={currentSubjectIndex === activeQuestions.length - 1}
-                onClick={() =>
-                  setCurrentSubjectIndex((prev) =>
-                    Math.min(activeQuestions.length - 1, prev + 1)
-                  )
-                }
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg disabled:opacity-40 flex items-center gap-1"
-              >
-                Next <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
           </div>
-        </div>
 
-        {/* Right Column: Per-Subject Question Grid */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 h-fit">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800">
-            {activeSubject} Grid (1 - {activeQuestions.length})
-          </h4>
-
-          <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto pr-1">
-            {activeQuestions.map((q, idx) => {
-              const isAnswered = !!answers[q.id];
-              const isCurrent = idx === currentSubjectIndex;
-
-              return (
-                <button
-                  key={q.id}
-                  onClick={() => setCurrentSubjectIndex(idx)}
-                  className={`h-9 rounded-lg font-mono text-xs font-bold transition flex items-center justify-center ${
-                    isCurrent
-                      ? 'ring-2 ring-emerald-400 bg-emerald-600 text-white'
-                      : isAnswered
-                      ? 'bg-emerald-950 border border-emerald-500/50 text-emerald-300'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
-          </div>
         </div>
       </div>
     </div>
