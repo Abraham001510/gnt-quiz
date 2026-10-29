@@ -2621,7 +2621,7 @@ not a commodity to be extracted without limit.]`,
     option_a: 'enduring',
     option_b: 'unearned',
     option_c: 'doubtful',
-    option_d: 'dazzling SECTION D: ORAL ENGLISH AND IDIOMS Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
+    option_d: 'dazzling',
     correct_option: 'A',
     explanation: 'The correct answer is Option A.'
   },
