@@ -100,6 +100,49 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     return () => clearInterval(interval);
   }, [deadlineAt]);
 
+  const handleFinalize = async (reason = 'manual_submit') => {
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      await supabase
+        .from('exam_attempts')
+        .update({
+          submitted_at: new Date().toISOString(),
+          submission_reason: reason,
+          is_finalized: true,
+        })
+        .eq('id', attemptId);
+    } catch (e) {
+      console.warn('Finalized locally.');
+    }
+
+    onFinalizeExam();
+  };
+
+  // Anti-Cheat Proctoring: Auto-submit if student leaves tab or minimizes browser
+  useEffect(() => {
+    const handleAntiCheatViolation = () => {
+      if (document.hidden || document.visibilityState === 'hidden') {
+        console.warn('Anti-cheat triggered: Tab switched or browser minimized.');
+        handleFinalize('auto_submit_tab_switch');
+      }
+    };
+
+    const handleWindowBlur = () => {
+      console.warn('Anti-cheat triggered: Browser window lost focus.');
+      handleFinalize('auto_submit_window_blur');
+    };
+
+    document.addEventListener('visibilitychange', handleAntiCheatViolation);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleAntiCheatViolation);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, [submitting, attemptId]);
+
   const activeQuestions = questionsBySubject[activeSubject] || [];
   const currentQuestion = activeQuestions[currentSubjectIndex];
 
@@ -119,26 +162,6 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     } catch (e) {
       console.warn('Answer saved locally.');
     }
-  };
-
-  const handleFinalize = async (reason = 'manual_submit') => {
-    if (submitting) return;
-    setSubmitting(true);
-
-    try {
-      await supabase
-        .from('exam_attempts')
-        .update({
-          submitted_at: new Date().toISOString(),
-          submission_reason: reason,
-          is_finalized: true,
-        })
-        .eq('id', attemptId);
-    } catch (e) {
-      console.warn('Finalized locally.');
-    }
-
-    onFinalizeExam();
   };
 
   if (loading || !currentQuestion) {
@@ -254,7 +277,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
             </div>
           )}
 
-          {/* Question & Options Panel (Right Column - Spans 7 or 9 cols based on passage) */}
+          {/* Question & Options Panel (Right Column - Spans 4 or 3 cols based on passage) */}
           <div className={`${hasPassage ? 'lg:col-span-4' : 'lg:col-span-3'} space-y-4`}>
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
               <div className="flex justify-between items-center pb-3 border-b border-slate-800">
