@@ -2,17 +2,27 @@ import { supabase } from './supabase';
 import { fullDocumentQuestions } from './fullQuestionBankData';
 
 export interface RawQuestionInput {
-  subjectCode: string;
-  topic: string;
-  questionText: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  correctAnswer: 'A' | 'B' | 'C' | 'D';
+  subjectCode?: string;
+  subject?: string;
+  topic?: string;
+  questionText?: string;
+  question_text?: string;
+  image_url?: string | null;
+  optionA?: string;
+  option_a?: string;
+  optionB?: string;
+  option_b?: string;
+  optionC?: string;
+  option_c?: string;
+  optionD?: string;
+  option_d?: string;
+  correctAnswer?: string;
+  correct_option?: string;
   explanation?: string;
-  difficultyLevel: 'easy' | 'medium' | 'hard';
+  difficultyLevel?: string;
+  difficulty_level?: string;
   examYear?: number;
+  exam_year?: number;
 }
 
 const SUBJECT_NAME_MAP: Record<string, string> = {
@@ -33,38 +43,57 @@ export async function seedQuestionBank(): Promise<{ success: boolean; count: num
   try {
     console.log(`Starting migration of ${fullDocumentQuestions.length} past questions...`);
 
+    // 1. Fetch active subjects for relational ID mapping
     const { data: dbSubjects } = await supabase.from('subjects').select('id, code, name');
     const subjectMap = new Map<string, string>();
-    dbSubjects?.forEach((s) => subjectMap.set(s.code, s.id));
+    dbSubjects?.forEach((s) => {
+      if (s.code) subjectMap.set(s.code, s.id);
+      if (s.name) subjectMap.set(s.name, s.id);
+    });
 
-    const formattedQuestions = fullDocumentQuestions.map((q) => {
-      const subjectCode = typeof q.subjectCode === 'string' ? q.subjectCode : '';
-      const fullSubjectName = SUBJECT_NAME_MAP[subjectCode] || subjectCode || 'General';
-      const subjectId = subjectMap.get(subjectCode) || null;
+    // 2. Format all questions with safe fallbacks for both camelCase and snake_case inputs
+    const formattedQuestions = fullDocumentQuestions.map((q: any) => {
+      const rawSubjectCode = typeof q.subjectCode === 'string' ? q.subjectCode : '';
+      const rawSubjectName = typeof q.subject === 'string' ? q.subject : '';
+      
+      const fullSubjectName =
+        SUBJECT_NAME_MAP[rawSubjectCode] ||
+        rawSubjectName ||
+        SUBJECT_NAME_MAP[rawSubjectName] ||
+        'General';
 
-      const questionText = typeof q.questionText === 'string' ? q.questionText : '';
-      const cleanedQuestionText = questionText.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
+      const subjectId =
+        subjectMap.get(rawSubjectCode) ||
+        subjectMap.get(rawSubjectName) ||
+        subjectMap.get(fullSubjectName) ||
+        null;
+
+      const rawQuestionText = q.questionText ?? q.question_text ?? '';
+      const cleanedQuestionText = rawQuestionText.replace(/\\underline\{([^}]+)\}/g, '<u>$1</u>');
 
       return {
         subject: fullSubjectName,
         subject_id: subjectId,
         topic: q.topic || 'General Topic',
         question_text: cleanedQuestionText,
-        option_a: q.optionA,
-        option_b: q.optionB,
-        option_c: q.optionC,
-        option_d: q.optionD,
-        correct_option: q.correctAnswer, // Matches your Supabase table column
+        image_url: q.image_url || null,
+        // Safe fallbacks to prevent "null value in column option_a" violations
+        option_a: q.optionA ?? q.option_a ?? 'Option A',
+        option_b: q.optionB ?? q.option_b ?? 'Option B',
+        option_c: q.optionC ?? q.option_c ?? 'Option C',
+        option_d: q.optionD ?? q.option_d ?? 'Option D',
+        correct_option: q.correctAnswer ?? q.correct_option ?? 'A',
         explanation: q.explanation || 'No detailed explanation provided.',
-        difficulty_level: q.difficultyLevel || 'medium',
+        difficulty_level: q.difficultyLevel ?? q.difficulty_level ?? 'medium',
         source_classification: 'verified_past_question',
         source_title: 'JAMB Full Practice Paper Document',
-        exam_year: q.examYear || 2024,
+        exam_year: q.examYear ?? q.exam_year ?? 2024,
         review_status: 'approved',
         is_active: true,
       };
     });
 
+    // 3. Batch Insert in Chunks of 100 to avoid request size limits
     const chunkSize = 100;
     let totalInserted = 0;
 
