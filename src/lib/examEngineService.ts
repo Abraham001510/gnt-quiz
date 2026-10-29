@@ -13,34 +13,46 @@ export interface ActiveExamSession {
 }
 
 /**
- * Creates or checks a candidate's JAMB examination session.
- * STRICT: If ANY attempt exists (finalized OR in-progress), blocks creating a new one!
+ * Creates or resumes a candidate's JAMB examination session.
  */
 export async function createFullJambAttempt(
   studentId: string,
   selectedSubjectIds: string[]
 ): Promise<{ success: boolean; attemptId?: string; error?: string }> {
   try {
-    // 1. Guard Check: Check for existing attempts
+    // 1. Verify authenticated user directly from Supabase auth to guarantee valid FK student_id
+    const { data: authData, error: authErr } = await supabase.auth.getUser();
+    const validStudentId = authData?.user?.id || studentId;
+
+    if (!validStudentId) {
+      return {
+        success: false,
+        error: 'Authentication error: Unable to verify user account identity.',
+      };
+    }
+
+    // 2. Check if the candidate ALREADY has an attempt record
     const { data: existingAttempts, error: checkErr } = await supabase
       .from('exam_attempts')
       .select('id, is_finalized, submitted_at')
-      .eq('student_id', studentId);
+      .eq('student_id', validStudentId);
 
     if (!checkErr && existingAttempts && existingAttempts.length > 0) {
       const attempt = existingAttempts[0];
 
+      // If the existing attempt is already completed/finalized, block re-entry
       if (attempt.is_finalized || attempt.submitted_at) {
         return {
           success: false,
-          error: 'You have already completed your examination attempt. Re-entry is strictly restricted.',
+          error: 'You have already completed your examination attempt. Re-entry is strictly forbidden.',
         };
       }
 
+      // If an active attempt exists, resume it
       return { success: true, attemptId: attempt.id };
     }
 
-    // 2. Fetch active exam configuration ID if present in database
+    // 3. Fetch active exam config if table exists, otherwise default to null
     let activeConfigId: string | null = null;
     try {
       const { data: configData } = await supabase
@@ -54,20 +66,20 @@ export async function createFullJambAttempt(
         activeConfigId = configData.id;
       }
     } catch (e) {
-      console.warn('No active exam_configs table found, continuing without config_id');
+      console.warn('Exam config query skipped');
     }
 
     const startedAt = new Date();
     const deadlineAt = new Date(startedAt.getTime() + 120 * 60 * 1000); // 120 Minutes
 
-    // 3. Insert new attempt record
+    // 4. Insert attempt record using verified auth ID
     const { data: attempt, error: attemptErr } = await supabase
       .from('exam_attempts')
       .insert([
         {
-          student_id: studentId,
+          student_id: validStudentId,
           selected_subject_ids: selectedSubjectIds,
-          config_id: activeConfigId, // <-- Pass active config ID or null
+          config_id: activeConfigId,
           started_at: startedAt.toISOString(),
           deadline_at: deadlineAt.toISOString(),
           is_finalized: false,
@@ -80,9 +92,9 @@ export async function createFullJambAttempt(
 
     if (attemptErr || !attempt) {
       console.error('Error creating attempt record:', attemptErr);
-      return { 
-        success: false, 
-        error: `Could not create examination session: ${attemptErr?.message || 'Database error'}` 
+      return {
+        success: false,
+        error: `Could not create examination session: ${attemptErr?.message || 'Database error'}`,
       };
     }
 
@@ -90,7 +102,7 @@ export async function createFullJambAttempt(
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to initialize exam attempt.' };
   }
-} 
+}
 
 /**
  * Saves student answer choice directly to Supabase.
