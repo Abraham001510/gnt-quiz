@@ -1784,6 +1784,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[For generations, the people of Okpara-Ife lived by the rhythm of the rains. Planting began with the
+first heavy downpour of April, and by September the granaries were full of yam, maize and cassava.
+Then the young began to leave. Lured by the promise of wages in the cities, they abandoned the hoe
+for the briefcase, leaving the elders to till land they could no longer manage. Today, nearly half of
+the farmland lies fallow, and the annual harvest festival, once a riot of drums and dancing, has
+dwindled into a modest prayer meeting. Yet the village is not dying; it is merely changing. A
+cooperative formed by returning graduates now processes cassava into flour and sells it to bakeries
+in the state capital. The elders, sceptical at first, have been won over by the cheques that arrive
+each quarter. 'We feared that learning would steal our children,' observed old Chief Adigun. 'We did
+not realise that it might also bring them home.']`,
     question_text: 'According to the passage, the young people left Okpara-Ife mainly because',
     option_a: 'the rains no longer came in April',
     option_b: 'the elders drove them away',
@@ -1795,6 +1806,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[For generations, the people of Okpara-Ife lived by the rhythm of the rains. Planting began with the
+first heavy downpour of April, and by September the granaries were full of yam, maize and cassava.
+Then the young began to leave. Lured by the promise of wages in the cities, they abandoned the hoe
+for the briefcase, leaving the elders to till land they could no longer manage. Today, nearly half of
+the farmland lies fallow, and the annual harvest festival, once a riot of drums and dancing, has
+dwindled into a modest prayer meeting. Yet the village is not dying; it is merely changing. A
+cooperative formed by returning graduates now processes cassava into flour and sells it to bakeries
+in the state capital. The elders, sceptical at first, have been won over by the cheques that arrive
+each quarter. 'We feared that learning would steal our children,' observed old Chief Adigun. 'We did
+not realise that it might also bring them home.']`,
     question_text: 'The expression \'abandoned the hoe for the briefcase\' means that they',
     option_a: 'sold their farm tools to buy books',
     option_b: 'became full-time traders',
@@ -1806,6 +1828,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[For generations, the people of Okpara-Ife lived by the rhythm of the rains. Planting began with the
+first heavy downpour of April, and by September the granaries were full of yam, maize and cassava.
+Then the young began to leave. Lured by the promise of wages in the cities, they abandoned the hoe
+for the briefcase, leaving the elders to till land they could no longer manage. Today, nearly half of
+the farmland lies fallow, and the annual harvest festival, once a riot of drums and dancing, has
+dwindled into a modest prayer meeting. Yet the village is not dying; it is merely changing. A
+cooperative formed by returning graduates now processes cassava into flour and sells it to bakeries
+in the state capital. The elders, sceptical at first, have been won over by the cheques that arrive
+each quarter. 'We feared that learning would steal our children,' observed old Chief Adigun. 'We did
+not realise that it might also bring them home.']`,
     question_text: 'The word \'fallow\' as used in the passage means',
     option_a: 'waterlogged',
     option_b: 'unusually fertile',
@@ -1817,6 +1850,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[For generations, the people of Okpara-Ife lived by the rhythm of the rains. Planting began with the
+first heavy downpour of April, and by September the granaries were full of yam, maize and cassava.
+Then the young began to leave. Lured by the promise of wages in the cities, they abandoned the hoe
+for the briefcase, leaving the elders to till land they could no longer manage. Today, nearly half of
+the farmland lies fallow, and the annual harvest festival, once a riot of drums and dancing, has
+dwindled into a modest prayer meeting. Yet the village is not dying; it is merely changing. A
+cooperative formed by returning graduates now processes cassava into flour and sells it to bakeries
+in the state capital. The elders, sceptical at first, have been won over by the cheques that arrive
+each quarter. 'We feared that learning would steal our children,' observed old Chief Adigun. 'We did
+not realise that it might also bring them home.']`,
     question_text: 'The harvest festival has',
     option_a: 'been banned by the elders',
     option_b: 'moved to the state capital',
@@ -1828,6 +1872,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[For generations, the people of Okpara-Ife lived by the rhythm of the rains. Planting began with the
+first heavy downpour of April, and by September the granaries were full of yam, maize and cassava.
+Then the young began to leave. Lured by the promise of wages in the cities, they abandoned the hoe
+for the briefcase, leaving the elders to till land they could no longer manage. Today, nearly half of
+the farmland lies fallow, and the annual harvest festival, once a riot of drums and dancing, has
+dwindled into a modest prayer meeting. Yet the village is not dying; it is merely changing. A
+cooperative formed by returning graduates now processes cassava into flour and sells it to bakeries
+in the state capital. The elders, sceptical at first, have been won over by the cheques that arrive
+each quarter. 'We feared that learning would steal our children,' observed old Chief Adigun. 'We did
+not realise that it might also bring them home.']`,
     question_text: 'Chief Adigun\'s closing remark suggests that he',
     option_a: 'has changed his mind about education',
     option_b: 'regrets sending his children to school',
@@ -1839,6 +1894,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Critics of the modern classroom often lament that pupils no longer read for pleasure. The charge is
+not entirely unfounded: a survey of secondary schools in three states revealed that fewer than one
+pupil in five had finished a novel in the previous year. But to blame the smartphone alone is to
+mistake a symptom for the disease. In many communities, a public library is a distant memory, and
+a new storybook costs more than a week's feeding allowance. Where books are scarce, the appetite
+for them cannot flourish. Moreover, teachers who themselves seldom read are poorly placed to
+inspire the habit in others. Until governments restock libraries and schools reward curiosity rather
+than mere cramming, exhortations to read will remain empty slogans. Nevertheless, there are
+encouraging signs. Several community reading clubs, run by volunteers at weekends, have attracted
+hundreds of children who were previously indifferent to the printed page.]`,
     question_text: 'The writer\'s main argument is that',
     option_a: 'novels are too expensive to be written',
     option_b: 'smartphones alone are responsible for poor reading',
@@ -1850,6 +1916,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Critics of the modern classroom often lament that pupils no longer read for pleasure. The charge is
+not entirely unfounded: a survey of secondary schools in three states revealed that fewer than one
+pupil in five had finished a novel in the previous year. But to blame the smartphone alone is to
+mistake a symptom for the disease. In many communities, a public library is a distant memory, and
+a new storybook costs more than a week's feeding allowance. Where books are scarce, the appetite
+for them cannot flourish. Moreover, teachers who themselves seldom read are poorly placed to
+inspire the habit in others. Until governments restock libraries and schools reward curiosity rather
+than mere cramming, exhortations to read will remain empty slogans. Nevertheless, there are
+encouraging signs. Several community reading clubs, run by volunteers at weekends, have attracted
+hundreds of children who were previously indifferent to the printed page.]`,
     question_text: '\'To mistake a symptom for the disease\' means to',
     option_a: 'ignore a doctor\'s advice',
     option_b: 'confuse an effect with its real cause',
@@ -1861,6 +1938,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Critics of the modern classroom often lament that pupils no longer read for pleasure. The charge is
+not entirely unfounded: a survey of secondary schools in three states revealed that fewer than one
+pupil in five had finished a novel in the previous year. But to blame the smartphone alone is to
+mistake a symptom for the disease. In many communities, a public library is a distant memory, and
+a new storybook costs more than a week's feeding allowance. Where books are scarce, the appetite
+for them cannot flourish. Moreover, teachers who themselves seldom read are poorly placed to
+inspire the habit in others. Until governments restock libraries and schools reward curiosity rather
+than mere cramming, exhortations to read will remain empty slogans. Nevertheless, there are
+encouraging signs. Several community reading clubs, run by volunteers at weekends, have attracted
+hundreds of children who were previously indifferent to the printed page.]`,
     question_text: 'One reason given for pupils\' poor reading habit is that',
     option_a: 'examinations have been scrapped',
     option_b: 'parents forbid reading',
@@ -1872,6 +1960,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Critics of the modern classroom often lament that pupils no longer read for pleasure. The charge is
+not entirely unfounded: a survey of secondary schools in three states revealed that fewer than one
+pupil in five had finished a novel in the previous year. But to blame the smartphone alone is to
+mistake a symptom for the disease. In many communities, a public library is a distant memory, and
+a new storybook costs more than a week's feeding allowance. Where books are scarce, the appetite
+for them cannot flourish. Moreover, teachers who themselves seldom read are poorly placed to
+inspire the habit in others. Until governments restock libraries and schools reward curiosity rather
+than mere cramming, exhortations to read will remain empty slogans. Nevertheless, there are
+encouraging signs. Several community reading clubs, run by volunteers at weekends, have attracted
+hundreds of children who were previously indifferent to the printed page.]`,
     question_text: 'The word \'exhortations\' as used in the passage means',
     option_a: 'bitter complaints',
     option_b: 'urgent appeals',
@@ -1883,6 +1982,17 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Critics of the modern classroom often lament that pupils no longer read for pleasure. The charge is
+not entirely unfounded: a survey of secondary schools in three states revealed that fewer than one
+pupil in five had finished a novel in the previous year. But to blame the smartphone alone is to
+mistake a symptom for the disease. In many communities, a public library is a distant memory, and
+a new storybook costs more than a week's feeding allowance. Where books are scarce, the appetite
+for them cannot flourish. Moreover, teachers who themselves seldom read are poorly placed to
+inspire the habit in others. Until governments restock libraries and schools reward curiosity rather
+than mere cramming, exhortations to read will remain empty slogans. Nevertheless, there are
+encouraging signs. Several community reading clubs, run by volunteers at weekends, have attracted
+hundreds of children who were previously indifferent to the printed page.]`,
     question_text: 'The writer\'s attitude in the last two sentences is',
     option_a: 'bitterly resentful',
     option_b: 'scornful',
@@ -1894,6 +2004,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'The expression \'bartered like grain\' implies that attention is being treated as',
     option_a: 'a harvest that must be shared equally',
     option_b: 'a commodity that can be traded for profit',
@@ -1905,6 +2031,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'In the context of the passage, \'prodigious ingenuity\' means',
     option_a: 'deceptive politeness',
     option_b: 'wasteful cleverness',
@@ -1916,6 +2058,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'The reference to laboratory pigeons is used by the writer to suggest that',
     option_a: 'the reward schedule of screens is a recognised technique for producing compulsive behaviour',
     option_b: 'screen users are as unintelligent as animals',
@@ -1927,6 +2085,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'The writer describes the defenders\' retort as \'ethically evasive\' because it',
     option_a: 'ignores the fact that preferences can themselves be engineered',
     option_b: 'admits that technology is harmful',
@@ -1938,6 +2112,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'The writer\'s attitude to the fatalism that accompanies complaint is one of',
     option_a: 'reluctant acceptance',
     option_b: 'rejection, supported by historical precedent',
@@ -1949,6 +2139,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'According to the writer, the pre-digital age',
     option_a: 'was marked by excessive regulation',
     option_b: 'was never as idyllic as memory suggests',
@@ -1960,6 +2166,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'The writer\'s tone in the passage can best be described as',
     option_a: 'neutral and detached',
     option_b: 'angry and abusive',
@@ -1971,6 +2193,22 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION A: COMPREHENSION - Read the passage carefully and answer the question.',
+    passage_text: `[Few phenomena have altered the texture of everyday life so profoundly, and yet so imperceptibly,
+as the migration of human attention onto screens. The merchants of this new economy, having
+discovered that a person's undivided gaze can be bartered like grain, devote prodigious ingenuity to
+prolonging it. Notifications are timed to exploit the faint anxiety of being left out; feeds are
+engineered to have no natural end; and rewards arrive at unpredictable intervals, a schedule long
+known to bind laboratory pigeons to a lever. Defenders of the industry retort that no one is
+compelled to look, and that technology merely gratifies preferences it did not create. The retort is
+superficially persuasive but ethically evasive. A preference manufactured by design is not the same
+as one freely arrived at, and a market that profits from eroding the capacity for self-restraint cannot
+plead the innocence of mere service. None of this, however, justifies the fatalism that often
+accompanies complaint. Societies have previously tamed forces that seemed ungovernable: they
+regulated factory hours, outlawed the adulteration of food, and compelled the disclosure of risks in
+advertising. What is required is not nostalgia for a pre-digital age, which never existed in the idyllic
+form recollection supplies, but the political will to insist that human attention, like human labour, is
+not a commodity to be extracted without limit.]`,
     question_text: 'As used in the passage, \'adulteration\' means',
     option_a: 'the labelling of food for export',
     option_b: 'the adding of nutrients to food',
@@ -1982,6 +2220,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'Neither the principal nor the teachers ___ aware of the change in the timetable.',
     option_a: 'were',
     option_b: 'is',
@@ -1993,6 +2232,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'Had I known about the fire, I ___ earlier.',
     option_a: 'had left',
     option_b: 'would have left',
@@ -2004,6 +2244,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'She is the only one of the girls who ___ passed the test.',
     option_a: 'has',
     option_b: 'were',
@@ -2015,6 +2256,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'Choose the option that is correctly spelt.',
     option_a: 'acommodation',
     option_b: 'accommodation',
@@ -2026,6 +2268,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'I would rather you ___ now.',
     option_a: 'go',
     option_b: 'went',
@@ -2037,6 +2280,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'The man, ___ car was stolen, reported to the police.',
     option_a: 'whose',
     option_b: 'who',
@@ -2048,6 +2292,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'By next June, the students ___ their course.',
     option_a: 'will have completed',
     option_b: 'will complete',
@@ -2059,6 +2304,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'The headmaster prevented the boys ___ leaving the compound.',
     option_a: 'with',
     option_b: 'of',
@@ -2070,6 +2316,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'My uncle is ___ honest man.',
     option_a: 'an',
     option_b: 'a',
@@ -2081,6 +2328,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'Adamu is senior ___ me by two years.',
     option_a: 'to',
     option_b: 'over',
@@ -2092,6 +2340,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'Not only ___ the examination, but she also won the prize for the best candidate.',
     option_a: 'passed she',
     option_b: 'she passed',
@@ -2103,6 +2352,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'The Secretary, as well as the Directors, ___ expected to attend the meeting.',
     option_a: 'have been',
     option_b: 'are',
@@ -2114,6 +2364,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'Had the committee ___ its report on time, the delay could have been avoided.',
     option_a: 'to submit',
     option_b: 'submitted',
@@ -2125,6 +2376,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'The proposal was rejected, ___ surprised no one.',
     option_a: 'what',
     option_b: 'it',
@@ -2136,6 +2388,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'Choose the sentence that is grammatically correct.',
     option_a: 'The criteria for selection is clearly stated.',
     option_b: 'The criterias for selection are clearly stated.',
@@ -2147,6 +2400,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'No sooner had the bell rung ___ the pupils rushed out of the classroom.',
     option_a: 'when',
     option_b: 'then',
@@ -2158,6 +2412,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'The principal insisted that the meeting ___ postponed until the following week.',
     option_a: 'be',
     option_b: 'is',
@@ -2169,6 +2424,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION B: LEXIS AND STRUCTURE - Choose the option that best completes each sentence.',
     question_text: 'The new policy has been criticised by the very people ___ it was designed to help.',
     option_a: 'whose',
     option_b: 'whom',
@@ -2180,6 +2436,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'The headmaster was adamant about the new rule.',
     option_a: 'cheerful',
     option_b: 'flexible',
@@ -2191,6 +2448,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'The witness gave a candid account of the accident.',
     option_a: 'hurried',
     option_b: 'false',
@@ -2202,6 +2460,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'The government has decided to curb inflation.',
     option_a: 'ignore',
     option_b: 'measure',
@@ -2213,6 +2472,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'His meticulous work impressed the panel.',
     option_a: 'hurried',
     option_b: 'careful',
@@ -2224,6 +2484,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'The senator\'s long speech was replete with platitudes.',
     option_a: 'sharp insults',
     option_b: 'bold promises',
@@ -2235,6 +2496,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'The new law was ratified without debate.',
     option_a: 'rejected',
     option_b: 'published',
@@ -2246,6 +2508,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'His laconic reply irritated the committee.',
     option_a: 'lengthy',
     option_b: 'evasive',
@@ -2257,6 +2520,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option nearest in meaning to the underlined word.',
     question_text: 'The scheme was ostensibly meant to help the poor.',
     option_a: 'secretly',
     option_b: 'apparently',
@@ -2268,6 +2532,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'The old man\'s frugal lifestyle surprised his neighbours.',
     option_a: 'thrifty',
     option_b: 'modest',
@@ -2279,6 +2544,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'The lecturer was so verbose that students lost interest.',
     option_a: 'boring',
     option_b: 'loud',
@@ -2290,6 +2556,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'The two leaders held a cordial meeting.',
     option_a: 'hostile',
     option_b: 'private',
@@ -2301,6 +2568,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'His reluctance to help surprised us.',
     option_a: 'delay',
     option_b: 'failure',
@@ -2312,6 +2580,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'The manager\'s reply to the query was equivocal.',
     option_a: 'unambiguous',
     option_b: 'bitter',
@@ -2323,6 +2592,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'After the storm, the village was strangely tranquil.',
     option_a: 'dark',
     option_b: 'deserted',
@@ -2334,6 +2604,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'She was magnanimous in victory.',
     option_a: 'silent',
     option_b: 'arrogant',
@@ -2345,6 +2616,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION C: SYNONYMS AND ANTONYMS - choose the option opposite in meaning to the underlined word.',
     question_text: 'The actor\'s fame proved to be ephemeral.',
     option_a: 'enduring',
     option_b: 'unearned',
@@ -2356,6 +2628,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'boot',
     option_a: 'fruit',
     option_b: 'floor',
@@ -2367,6 +2640,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'Which of these words is stressed on the second syllable?',
     option_a: 'hospital',
     option_b: 'computer',
@@ -2378,6 +2652,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'bird',
     option_a: 'bared',
     option_b: 'heard',
@@ -2389,6 +2664,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'Which of these words is stressed on the third syllable?',
     option_a: 'economy',
     option_b: 'engineer',
@@ -2400,6 +2676,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'measure',
     option_a: 'jungle',
     option_b: 'passion',
@@ -2411,6 +2688,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'The contractor turned a blind eye to the defects in the building. This means he',
     option_a: 'deliberately ignored them',
     option_b: 'repaired them secretly',
@@ -2422,6 +2700,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'The minister found himself between the devil and the deep blue sea. This means he faced',
     option_a: 'an opportunity to make a fortune',
     option_b: 'a dangerous journey by water',
@@ -2433,6 +2712,7 @@ export const fullDocumentQuestions: RawQuestionInput[] = [
   {
     subject: 'Use of English',
     topic: 'Use of English Practice',
+    section_instruction: 'SECTION D: ORAL ENGLISH AND IDIOMS - Choose the option that answers each question: same sound, correct stress or the meaning of the idiom.',
     question_text: 'After a long and fruitless negotiation, the union leaders decided to throw in the towel. This means they decided to',
     option_a: 'call a strike',
     option_b: 'begin the talks afresh',
