@@ -21,7 +21,7 @@ export async function createFullJambAttempt(
   selectedSubjectIds: string[]
 ): Promise<{ success: boolean; attemptId?: string; error?: string }> {
   try {
-    // 1. Check if the candidate ALREADY has an attempt record
+    // 1. Guard Check: Check for existing attempts
     const { data: existingAttempts, error: checkErr } = await supabase
       .from('exam_attempts')
       .select('id, is_finalized, submitted_at')
@@ -30,28 +30,44 @@ export async function createFullJambAttempt(
     if (!checkErr && existingAttempts && existingAttempts.length > 0) {
       const attempt = existingAttempts[0];
 
-      // If the existing attempt is already completed/finalized, block re-entry
       if (attempt.is_finalized || attempt.submitted_at) {
         return {
           success: false,
-          error: 'You have already completed your examination attempt. Re-entry is strictly forbidden.',
+          error: 'You have already completed your examination attempt. Re-entry is strictly restricted.',
         };
       }
 
-      // If an active attempt exists, resume it instead of creating a new row
       return { success: true, attemptId: attempt.id };
+    }
+
+    // 2. Fetch active exam configuration ID if present in database
+    let activeConfigId: string | null = null;
+    try {
+      const { data: configData } = await supabase
+        .from('exam_configs')
+        .select('id')
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (configData) {
+        activeConfigId = configData.id;
+      }
+    } catch (e) {
+      console.warn('No active exam_configs table found, continuing without config_id');
     }
 
     const startedAt = new Date();
     const deadlineAt = new Date(startedAt.getTime() + 120 * 60 * 1000); // 120 Minutes
 
-    // 2. Insert new attempt record ONLY if no record exists for this student
+    // 3. Insert new attempt record
     const { data: attempt, error: attemptErr } = await supabase
       .from('exam_attempts')
       .insert([
         {
           student_id: studentId,
           selected_subject_ids: selectedSubjectIds,
+          config_id: activeConfigId, // <-- Pass active config ID or null
           started_at: startedAt.toISOString(),
           deadline_at: deadlineAt.toISOString(),
           is_finalized: false,
@@ -74,7 +90,7 @@ export async function createFullJambAttempt(
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to initialize exam attempt.' };
   }
-}
+} 
 
 /**
  * Saves student answer choice directly to Supabase.
