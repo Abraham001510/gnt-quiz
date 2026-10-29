@@ -13,129 +13,68 @@ export interface ActiveExamSession {
 }
 
 /**
- * Creates or resumes a candidate's JAMB examination session.
+ * Creates or checks a candidate's JAMB examination session.
+ * STRICT: If ANY attempt exists (finalized OR in-progress), blocks creating a new one!
  */
 export async function createFullJambAttempt(
   studentId: string,
   selectedSubjectIds: string[]
 ): Promise<{ success: boolean; attemptId?: string; error?: string }> {
   try {
-    // 1. Guard: Verify if student already has a finalized attempt record
+    // 1. Guard Check: Check for ANY existing attempt for this student_id
     const { data: existingAttempts, error: checkErr } = await supabase
       .from('exam_attempts')
-      .select('id, is_finalized')
+      .select('id, is_finalized, submitted_at')
       .eq('student_id', studentId);
 
     if (!checkErr && existingAttempts && existingAttempts.length > 0) {
-      const completed = existingAttempts.find((att) => att.is_finalized);
+      // If ANY finalized attempt exists, block completely
+      const completed = existingAttempts.find((att) => att.is_finalized || att.submitted_at);
       if (completed) {
         return {
           success: false,
-          error: 'You have already completed your examination attempt. Re-entry is strictly restricted.',
+          error: 'You have already completed your examination. Re-entry or new attempts are strictly forbidden.',
         };
       }
 
-      // Resume active unfinalized attempt if present
-      const inProgress = existingAttempts.find((att) => !att.is_finalized);
-      if (inProgress) {
-        return { success: true, attemptId: inProgress.id };
-      }
+      // If an unfinalized attempt exists, lock them into returning to that exact attempt
+      const active = existingAttempts[0];
+      return { success: true, attemptId: active.id };
     }
 
     const startedAt = new Date();
     const deadlineAt = new Date(startedAt.getTime() + 120 * 60 * 1000); // 120 Minutes
 
-    let attemptId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    // 2. Insert new attempt record
+    const { data: attempt, error: attemptErr } = await supabase
+      .from('exam_attempts')
+      .insert([
+        {
+          student_id: studentId,
+          selected_subject_ids: selectedSubjectIds,
+          started_at: startedAt.toISOString(),
+          deadline_at: deadlineAt.toISOString(),
+          is_finalized: false,
+          raw_score: 0,
+          percentage_score: 0,
+        },
+      ])
+      .select('id')
+      .single();
 
-    try {
-      const { data: attempt, error: attemptErr } = await supabase
-        .from('exam_attempts')
-        .insert([
-          {
-            student_id: studentId,
-            selected_subject_ids: selectedSubjectIds,
-            started_at: startedAt.toISOString(),
-            deadline_at: deadlineAt.toISOString(),
-            is_finalized: false,
-            raw_score: 0,
-            percentage_score: 0,
-          },
-        ])
-        .select('id')
-        .single();
-
-      if (!attemptErr && attempt) {
-        attemptId = attempt.id;
-      }
-    } catch (e) {
-      console.warn('Attempt recorded locally');
+    if (attemptErr || !attempt) {
+      console.error('Error creating attempt record:', attemptErr);
+      return { success: false, error: 'Could not create examination session in database.' };
     }
 
-    // 2. Resolve chosen subject names to query specific questions
-    const { data: chosenSubjects } = await supabase
-      .from('subjects')
-      .select('name')
-      .in('id', selectedSubjectIds);
-
-    const selectedNames = chosenSubjects?.map((s) => s.name) || ['Use of English'];
-
-    // Query questions matching chosen 4 subjects
-    let allQuestions: any[] = [];
-    try {
-      const { data: qData } = await supabase
-        .from('questions')
-        .select('*')
-        .in('subject', selectedNames);
-
-      if (qData && qData.length > 0) {
-        allQuestions = qData;
-      }
-    } catch (e) {
-      console.warn('Fetching DB questions failed, activating dynamic generator');
-    }
-
-    // Fallback generator for 180 JAMB set if offline/testing
-    const generateSubjectSet = (subjectName: string, count: number) => {
-      return Array.from({ length: count }, (_, idx) => ({
-        id: `q-${subjectName.toLowerCase().replace(/\s+/g, '-')}-${idx + 1}`,
-        subject: subjectName,
-        topic: `${subjectName} Section`,
-        question_text: `${subjectName} Question ${idx + 1}: Practice UTME evaluation question testing core syllabus competency.`,
-        option_a: 'Option A: Primary Choice',
-        option_b: 'Option B: Secondary Choice',
-        option_c: 'Option C: Alternative Choice',
-        option_d: 'Option D: Evaluation Choice',
-        correct_option: ['A', 'B', 'C', 'D'][idx % 4],
-      }));
-    };
-
-    if (allQuestions.length < 180) {
-      const englishSet = generateSubjectSet('Use of English', 60);
-
-      const otherSubjects = selectedSubjectIds
-        .filter((s) => s !== 'Use of English' && s !== 'eng')
-        .slice(0, 3);
-
-      const subj1 = otherSubjects[0] || 'Mathematics';
-      const subj2 = otherSubjects[1] || 'Physics';
-      const subj3 = otherSubjects[2] || 'Chemistry';
-
-      allQuestions = [
-        ...englishSet,
-        ...generateSubjectSet(subj1, 40),
-        ...generateSubjectSet(subj2, 40),
-        ...generateSubjectSet(subj3, 40),
-      ];
-    }
-
-    return { success: true, attemptId };
+    return { success: true, attemptId: attempt.id };
   } catch (err: any) {
     return { success: false, error: err.message || 'Failed to initialize exam attempt.' };
   }
 }
 
 /**
- * Saves candidate's answer choice directly to Supabase.
+ * Saves student answer choice directly to Supabase.
  */
 export async function saveStudentAnswer(
   attemptId: string,
@@ -208,7 +147,7 @@ export async function finalizeAndGradeAttempt(
   } catch (err: any) {
     console.error('Finalize attempt error:', err.message || err);
 
-    // Fail-safe fallback: Force update attempt to finalized so candidate is never stuck loading
+    // Fail-safe fallback: Force update attempt to finalized
     try {
       await supabase
         .from('exam_attempts')
