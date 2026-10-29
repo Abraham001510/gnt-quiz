@@ -12,7 +12,7 @@ interface CbtExamProps {
 export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam }) => {
   const [questionsBySubject, setQuestionsBySubject] = useState<Record<string, any[]>>({});
   const [subjectsList, setSubjectsList] = useState<string[]>([]);
-  const [activeSubject, setActiveSubject] = useState<string>('Use of English');
+  const [activeSubject, setActiveSubject] = useState<string>('');
   const [currentSubjectIndex, setCurrentSubjectIndex] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
 
@@ -26,36 +26,41 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
   useEffect(() => {
     let mounted = true;
 
-    async function initExam() {
+    async function initExamWorkspace() {
       try {
         setLoading(true);
 
-        // 1. Fetch attempt record to get selected_subject_ids
-        const { data: attemptData } = await supabase
+        // 1. Fetch current attempt to get selected_subject_ids
+        const { data: attemptData, error: attemptErr } = await supabase
           .from('exam_attempts')
           .select('selected_subject_ids')
           .eq('id', attemptId)
           .single();
 
-        const selectedSubjectIds: string[] = attemptData?.selected_subject_ids || [];
-
-        // 2. Load ALL active subjects from DB
-        const { data: allSubjects } = await supabase.from('subjects').select('*');
-
-        // 3. Resolve the chosen subject names cleanly
-        let chosenSubjectNames: string[] = [];
-        if (allSubjects && selectedSubjectIds.length > 0) {
-          chosenSubjectNames = allSubjects
-            .filter(
-              (s) =>
-                selectedSubjectIds.includes(s.id) ||
-                selectedSubjectIds.includes(s.code) ||
-                selectedSubjectIds.includes(s.name)
-            )
-            .map((s) => s.name);
+        if (attemptErr || !attemptData) {
+          console.error('Error fetching attempt record:', attemptErr);
         }
 
-        // 4. Fetch ALL questions from DB
+        const selectedSubjectIds: string[] = attemptData?.selected_subject_ids || [];
+
+        // 2. Fetch active subjects from DB to resolve names and IDs cleanly
+        const { data: allSubjects } = await supabase
+          .from('subjects')
+          .select('id, code, name')
+          .eq('is_active', true);
+
+        // Map candidate's selected subject IDs to actual subject objects
+        const selectedSubjectObjects = (allSubjects || []).filter(
+          (s) =>
+            selectedSubjectIds.includes(s.id) ||
+            selectedSubjectIds.includes(s.code) ||
+            selectedSubjectIds.includes(s.name)
+        );
+
+        // Extract clean array of candidate chosen subject names
+        const chosenSubjectNames = selectedSubjectObjects.map((s) => s.name);
+
+        // 3. Query questions from DB
         const { data: dbQuestions } = await supabase
           .from('questions')
           .select('*')
@@ -64,23 +69,21 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
         if (dbQuestions && mounted) {
           const grouped: Record<string, any[]> = {};
 
+          // Filter questions STRICTLY by the candidate's chosen subject names
           dbQuestions.forEach((q) => {
-            const subName = q.subject || 'Use of English';
+            const qSubjectName = (q.subject || '').trim();
 
-            // Filter: Keep question if subject matches candidate selection OR if subject selection is empty
-            const matchesSelection =
-              chosenSubjectNames.length === 0 ||
-              chosenSubjectNames.some(
-                (chosen) => chosen.toLowerCase().trim() === subName.toLowerCase().trim()
-              );
+            const isCandidateSubject = chosenSubjectNames.some(
+              (chosenName) => chosenName.toLowerCase().trim() === qSubjectName.toLowerCase()
+            );
 
-            if (matchesSelection) {
-              if (!grouped[subName]) grouped[subName] = [];
-              grouped[subName].push(q);
+            if (isCandidateSubject) {
+              if (!grouped[qSubjectName]) grouped[qSubjectName] = [];
+              grouped[qSubjectName].push(q);
             }
           });
 
-          // Ensure Use of English comes first, then other subjects
+          // Enforce JAMB quotas: 60 for Use of English, 40 for chosen departmental subjects
           const formattedGrouped: Record<string, any[]> = {};
           const sortedSubjectKeys = Object.keys(grouped).sort((a, b) => {
             if (a.toLowerCase().includes('english')) return -1;
@@ -100,19 +103,19 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           if (subs.length > 0) setActiveSubject(subs[0]);
         }
       } catch (err) {
-        console.error('Error fetching questions:', err);
+        console.error('Error loading examination workspace:', err);
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
-    initExam();
+    initExamWorkspace();
     return () => {
       mounted = false;
     };
   }, [attemptId]);
 
-  // Timer Countdown
+  // Timer Countdown Logic
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -177,7 +180,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
           </div>
           <h2 className="text-xl font-bold text-white">Examination Submitted Successfully</h2>
           <p className="text-slate-400 text-xs leading-relaxed">
-            Your answers have been securely recorded in the portal database. Results will be published by the administrator.
+            Your answers have been recorded in the database. Scores will be published by the administrator.
           </p>
           <button
             onClick={onFinalizeExam}
@@ -208,7 +211,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-mono text-sm gap-3">
         <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 font-mono">Loading Examination Workspace & Subjects...</p>
+        <p className="text-slate-400 font-mono">Loading Candidate Examination Workspace...</p>
       </div>
     );
   }
@@ -257,7 +260,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       </header>
 
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-4">
-        {/* Subject Nav showing all chosen subjects */}
+        {/* Subject Navigation Header — Displays ONLY candidate's chosen 4 subjects */}
         <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-xl border border-slate-800 overflow-x-auto">
           {subjectsList.map((sub) => {
             const count = (questionsBySubject[sub] || []).length;
