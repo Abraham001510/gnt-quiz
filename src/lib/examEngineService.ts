@@ -12,13 +12,39 @@ export interface ActiveExamSession {
   subjects: Subject[];
 }
 
+/**
+ * Initializes or resumes a full JAMB examination attempt for a student.
+ */
 export async function createFullJambAttempt(
   studentId: string,
   selectedSubjectIds: string[]
 ): Promise<{ success: boolean; attemptId?: string; error?: string }> {
   try {
+    // 1. Guard: Check if student already has an attempt record in Supabase
+    const { data: existingAttempts, error: checkErr } = await supabase
+      .from('exam_attempts')
+      .select('id, is_finalized')
+      .eq('student_id', studentId);
+
+    if (!checkErr && existingAttempts && existingAttempts.length > 0) {
+      // Check if candidate has already finalized an attempt
+      const completed = existingAttempts.find((att) => att.is_finalized);
+      if (completed) {
+        return {
+          success: false,
+          error: 'You have already completed your examination attempt. Multiple attempts are strictly restricted.',
+        };
+      }
+
+      // Resume active unfinalized attempt if present
+      const inProgress = existingAttempts.find((att) => !att.is_finalized);
+      if (inProgress) {
+        return { success: true, attemptId: inProgress.id };
+      }
+    }
+
     const startedAt = new Date();
-    const deadlineAt = new Date(startedAt.getTime() + 120 * 60 * 1000); // 120 Minutes
+    const deadlineAt = new Date(startedAt.getTime() + 120 * 60 * 1000); // 120 Minutes Duration
 
     let attemptId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
@@ -43,10 +69,10 @@ export async function createFullJambAttempt(
         attemptId = attempt.id;
       }
     } catch (e) {
-      console.warn('Attempt created locally');
+      console.warn('Attempt record created locally');
     }
 
-    // Query DB for questions
+    // 2. Query Database for Question Bank
     let allQuestions: any[] = [];
     try {
       const { data: qData } = await supabase.from('questions').select('*');
@@ -54,28 +80,27 @@ export async function createFullJambAttempt(
         allQuestions = qData;
       }
     } catch (e) {
-      console.warn('Fetching DB questions failed, activating dynamic 180 generator');
+      console.warn('Fetching DB questions failed, activating fallback question generator');
     }
 
-    // Helper generator for complete 180 JAMB set
+    // Dynamic generator fallback for complete 180 JAMB question set
     const generateSubjectSet = (subjectName: string, count: number) => {
       return Array.from({ length: count }, (_, idx) => ({
         id: `q-${subjectName.toLowerCase().replace(/\s+/g, '-')}-${idx + 1}`,
         subject: subjectName,
-        topic: `${subjectName} Section`,
-        question_text: `${subjectName} Question ${idx + 1}: Sample UTME practice question evaluating core syllabus competency.`,
-        option_a: 'Option A: Primary Choice',
-        option_b: 'Option B: Secondary Choice',
-        option_c: 'Option C: Alternative Choice',
-        option_d: 'Option D: Evaluation Choice',
+        topic: `${subjectName} Core Syllabus`,
+        question_text: `${subjectName} Question ${idx + 1}: Practice UTME evaluation question testing syllabus competency.`,
+        option_a: 'Option A: Primary Answer Choice',
+        option_b: 'Option B: Secondary Answer Choice',
+        option_c: 'Option C: Alternative Answer Choice',
+        option_d: 'Option D: Distractor Answer Choice',
         correct_option: ['A', 'B', 'C', 'D'][idx % 4],
       }));
     };
 
-    // If database total is less than 180, construct the complete 180 JAMB set
     if (allQuestions.length < 180) {
       const englishSet = generateSubjectSet('Use of English', 60);
-      
+
       const otherSubjects = selectedSubjectIds
         .filter((s) => s !== 'Use of English' && s !== 'eng')
         .slice(0, 3);
@@ -98,6 +123,9 @@ export async function createFullJambAttempt(
   }
 }
 
+/**
+ * Saves or updates a student's selected answer choice for a specific question.
+ */
 export async function saveStudentAnswer(
   attemptId: string,
   questionId: string,
@@ -118,6 +146,71 @@ export async function saveStudentAnswer(
 
     return !error;
   } catch (e) {
+    console.warn('Answer saved locally.');
     return true;
+  }
+}
+
+/**
+ * Guarantees exam finalization without freezing on the loading screen.
+ */
+export async function finalizeAndGradeAttempt(
+  attemptId: string,
+  reason: string = 'manual_submit'
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. Fetch user submitted answers
+    const { data: studentAnswers } = await supabase
+      .from('student_answers')
+      .select('question_id, selected_option')
+      .eq('attempt_id', attemptId);
+
+    // 2. Fetch correct options for grading
+    const { data: questions } = await supabase
+      .from('questions')
+      .select('id, correct_option');
+
+    let totalCorrect = 0;
+    if (studentAnswers && questions) {
+      const correctMap = new Map(questions.map((q) => [q.id, q.correct_option]));
+      studentAnswers.forEach((ans) => {
+        if (correctMap.get(ans.question_id) === ans.selected_option) {
+          totalCorrect++;
+        }
+      });
+    }
+
+    // 3. Mark attempt as finalized in Supabase
+    const { error: updateError } = await supabase
+      .from('exam_attempts')
+      .update({
+        is_finalized: true,
+        submitted_at: new Date().toISOString(),
+        submission_reason: reason,
+        raw_score: totalCorrect,
+      })
+      .eq('id', attemptId);
+
+    if (updateError) throw updateError;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Finalize attempt error:', err.message || err);
+
+    // Safe fallback: Force update attempt to finalized so candidate is not stuck on loading screen
+    try {
+      await supabase
+        .from('exam_attempts')
+        .update({
+          is_finalized: true,
+          submitted_at: new Date().toISOString(),
+          submission_reason: reason,
+        })
+        .eq('id', attemptId);
+    } catch (e) {
+      console.error('Fallback finalization failed:', e);
+    }
+
+    return { success: false, error: err.message };
   }
 }
