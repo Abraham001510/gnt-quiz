@@ -9,6 +9,7 @@ import { StudentProfileView } from './components/profile/StudentProfileView';
 import { ExamResultsView } from './components/results/ExamResultsView';
 import { WeeklyUpdatesView } from './components/admin/WeeklyUpdatesView';
 import { BookOpen, Trophy, User, ShieldAlert, LogOut, Sparkles, Lock } from 'lucide-react';
+import { seedQuestionBank } from './lib/seedQuestions';
 
 interface ErrorBoundaryProps {
   children?: ReactNode;
@@ -325,10 +326,19 @@ function MainAppContent() {
   );
 }
 
-export default function App() {
+export function App() {
+  const handleSeed = async () => {
+    const result = await seedQuestionBank();
+    if (result.success) {
+      alert(`Successfully seeded ${result.count} questions!`);
+    } else {
+      alert(`Seeding failed: ${result.error}`);
+    }
+  };
+
   return (
-    <ErrorBoundary>
-      <MainAppContent />
-    </ErrorBoundary>
+    <div style={{ padding: '20px' }}>
+      <button onClick={handleSeed}>Sync Full Question Bank to DB</button>
+    </div>
   );
 }
