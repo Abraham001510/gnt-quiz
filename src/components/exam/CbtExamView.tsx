@@ -30,7 +30,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
       try {
         setLoading(true);
 
-        // 1. Fetch attempt record
+        // 1. Fetch attempt record to get selected_subject_ids
         const { data: attemptData } = await supabase
           .from('exam_attempts')
           .select('selected_subject_ids')
@@ -39,40 +39,48 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
 
         const selectedSubjectIds: string[] = attemptData?.selected_subject_ids || [];
 
-        // 2. Map UUIDs to real Subject Names
-        let chosenNames: string[] = ['Use of English'];
-        if (selectedSubjectIds.length > 0) {
-          const { data: matchedSubjects } = await supabase
-            .from('subjects')
-            .select('name')
-            .in('id', selectedSubjectIds);
+        // 2. Load ALL active subjects from DB
+        const { data: allSubjects } = await supabase.from('subjects').select('*');
 
-          if (matchedSubjects && matchedSubjects.length > 0) {
-            chosenNames = matchedSubjects.map((s) => s.name);
-          }
+        // 3. Resolve the chosen subject names cleanly
+        let chosenSubjectNames: string[] = [];
+        if (allSubjects && selectedSubjectIds.length > 0) {
+          chosenSubjectNames = allSubjects
+            .filter(
+              (s) =>
+                selectedSubjectIds.includes(s.id) ||
+                selectedSubjectIds.includes(s.code) ||
+                selectedSubjectIds.includes(s.name)
+            )
+            .map((s) => s.name);
         }
 
-        // 3. Fetch questions matching ANY of the chosen subject names
+        // 4. Fetch ALL questions from DB
         const { data: dbQuestions } = await supabase
           .from('questions')
           .select('*')
           .order('id', { ascending: true });
 
         if (dbQuestions && mounted) {
-          // Filter strictly by candidate chosen names
-          const filtered = dbQuestions.filter((q) =>
-            chosenNames.some(
-              (name) => name.toLowerCase().trim() === (q.subject || '').toLowerCase().trim()
-            )
-          );
-
           const grouped: Record<string, any[]> = {};
-          (filtered.length > 0 ? filtered : dbQuestions).forEach((q) => {
-            const sub = q.subject || 'Use of English';
-            if (!grouped[sub]) grouped[sub] = [];
-            grouped[sub].push(q);
+
+          dbQuestions.forEach((q) => {
+            const subName = q.subject || 'Use of English';
+
+            // Filter: Keep question if subject matches candidate selection OR if subject selection is empty
+            const matchesSelection =
+              chosenSubjectNames.length === 0 ||
+              chosenSubjectNames.some(
+                (chosen) => chosen.toLowerCase().trim() === subName.toLowerCase().trim()
+              );
+
+            if (matchesSelection) {
+              if (!grouped[subName]) grouped[subName] = [];
+              grouped[subName].push(q);
+            }
           });
 
+          // Ensure Use of English comes first, then other subjects
           const formattedGrouped: Record<string, any[]> = {};
           const sortedSubjectKeys = Object.keys(grouped).sort((a, b) => {
             if (a.toLowerCase().includes('english')) return -1;
@@ -104,6 +112,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     };
   }, [attemptId]);
 
+  // Timer Countdown
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -199,7 +208,7 @@ export const CbtExamView: React.FC<CbtExamProps> = ({ attemptId, onFinalizeExam 
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-mono text-sm gap-3">
         <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 font-mono">Loading Examination Workspace & Questions...</p>
+        <p className="text-slate-400 font-mono">Loading Examination Workspace & Subjects...</p>
       </div>
     );
   }
