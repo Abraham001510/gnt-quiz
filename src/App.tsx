@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode, useEffect } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
@@ -8,7 +8,7 @@ import { LeaderboardView } from './components/leaderboard/LeaderboardView';
 import { StudentProfileView } from './components/profile/StudentProfileView';
 import { ExamResultsView } from './components/results/ExamResultsView';
 import { WeeklyUpdatesView } from './components/admin/WeeklyUpdatesView';
-import { BookOpen, Trophy, User, ShieldAlert, LogOut, Sparkles, Lock } from 'lucide-react';
+import { BookOpen, Trophy, User, ShieldAlert, LogOut, Sparkles, Lock, RefreshCw } from 'lucide-react';
 import { seedQuestionBank } from './lib/seedQuestions';
 
 interface ErrorBoundaryProps {
@@ -100,6 +100,7 @@ function ResultsRoute() {
 function MainAppContent() {
   const { user, loading, signOut } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = React.useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -111,7 +112,7 @@ function MainAppContent() {
   }, [user]);
 
   // Strict Admin whitelist (Only your designated admin email has access)
-  const isAdmin = user?.email === 'wellingtonalfred54@gmail.com';
+  const isAdmin = user?.email === 'wellingtonalfred54@gmail.com' || user?.email === 'otunubiabraham@gmail.com';
 
   const handleStartExam = (subject: string) => {
     if (!user) {
@@ -119,6 +120,24 @@ function MainAppContent() {
       return;
     }
     navigate(`/exam/${subject}`);
+  };
+
+  const handleSeed = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const result = await seedQuestionBank();
+      if (result.success) {
+        alert(`✅ Successfully synced ${result.count} questions across all 11 subjects to Supabase!`);
+        window.location.reload();
+      } else {
+        alert(`❌ Seeding failed: ${result.error}`);
+      }
+    } catch (err: any) {
+      alert(`❌ Unexpected sync error: ${err.message || err}`);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   if (loading) {
@@ -155,6 +174,16 @@ function MainAppContent() {
           </Link>
 
           <nav className="flex items-center gap-1 sm:gap-2">
+            <button
+              onClick={handleSeed}
+              disabled={isSyncing}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/50 transition-colors mr-2 disabled:opacity-50"
+              title="Sync full 460-question bank to Supabase"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync DB'}</span>
+            </button>
+
             <Link
               to="/"
               className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors ${
@@ -327,18 +356,11 @@ function MainAppContent() {
 }
 
 export function App() {
-  const handleSeed = async () => {
-    const result = await seedQuestionBank();
-    if (result.success) {
-      alert(`Successfully seeded ${result.count} questions!`);
-    } else {
-      alert(`Seeding failed: ${result.error}`);
-    }
-  };
-
   return (
-    <div style={{ padding: '20px' }}>
-      <button onClick={handleSeed}>Sync Full Question Bank to DB</button>
-    </div>
+    <ErrorBoundary>
+      <MainAppContent />
+    </ErrorBoundary>
   );
 }
+
+export default App;
