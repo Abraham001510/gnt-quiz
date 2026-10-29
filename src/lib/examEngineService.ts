@@ -21,31 +21,31 @@ export async function createFullJambAttempt(
   selectedSubjectIds: string[]
 ): Promise<{ success: boolean; attemptId?: string; error?: string }> {
   try {
-    // 1. Guard Check: Check for ANY existing attempt for this student_id
+    // 1. Check if the candidate ALREADY has an attempt record
     const { data: existingAttempts, error: checkErr } = await supabase
       .from('exam_attempts')
       .select('id, is_finalized, submitted_at')
       .eq('student_id', studentId);
 
     if (!checkErr && existingAttempts && existingAttempts.length > 0) {
-      // If ANY finalized attempt exists, block completely
-      const completed = existingAttempts.find((att) => att.is_finalized || att.submitted_at);
-      if (completed) {
+      const attempt = existingAttempts[0];
+
+      // If the existing attempt is already completed/finalized, block re-entry
+      if (attempt.is_finalized || attempt.submitted_at) {
         return {
           success: false,
-          error: 'You have already completed your examination. Re-entry or new attempts are strictly forbidden.',
+          error: 'You have already completed your examination attempt. Re-entry is strictly forbidden.',
         };
       }
 
-      // If an unfinalized attempt exists, lock them into returning to that exact attempt
-      const active = existingAttempts[0];
-      return { success: true, attemptId: active.id };
+      // If an active attempt exists, resume it instead of creating a new row
+      return { success: true, attemptId: attempt.id };
     }
 
     const startedAt = new Date();
     const deadlineAt = new Date(startedAt.getTime() + 120 * 60 * 1000); // 120 Minutes
 
-    // 2. Insert new attempt record
+    // 2. Insert new attempt record ONLY if no record exists for this student
     const { data: attempt, error: attemptErr } = await supabase
       .from('exam_attempts')
       .insert([
@@ -64,7 +64,10 @@ export async function createFullJambAttempt(
 
     if (attemptErr || !attempt) {
       console.error('Error creating attempt record:', attemptErr);
-      return { success: false, error: 'Could not create examination session in database.' };
+      return { 
+        success: false, 
+        error: `Could not create examination session: ${attemptErr?.message || 'Database error'}` 
+      };
     }
 
     return { success: true, attemptId: attempt.id };
