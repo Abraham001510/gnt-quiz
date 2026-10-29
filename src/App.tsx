@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode, useEffect, useState } from 'react';
-import { Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
 import { CbtExamView } from './components/exam/CbtExamView';
@@ -58,21 +58,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 function ExamRoute() {
   const { user } = useAuth();
+  const { attemptId } = useParams<{ attemptId: string }>();
+  const navigate = useNavigate();
 
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  const navigate = useNavigate();
-  const [attemptId] = React.useState<string>(() => {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-      return crypto.randomUUID();
-    }
-    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  });
+  if (!attemptId) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleFinalizeExam = () => {
-    navigate('/results', { state: { attemptId } });
+    // Navigate directly back to home dashboard (shows completed lockout card)
+    navigate('/', { replace: true });
   };
 
   return (
@@ -111,15 +110,16 @@ function MainAppContent() {
     }
   }, [user]);
 
-  // Strict Admin whitelist (Only your designated admin email has access)
+  // Strict Admin whitelist
   const isAdmin = user?.email === 'wellingtonalfred54@gmail.com' || user?.email === 'otunubiabraham@gmail.com';
 
-  const handleStartExam = (subject: string) => {
+  const handleStartExam = (attemptId: string) => {
     if (!user) {
       setIsAuthOpen(true);
       return;
     }
-    navigate(`/exam/${subject}`);
+    // Navigate using the exact database attempt ID created by ExamLauncher
+    navigate(`/exam/${attemptId}`);
   };
 
   const handleSeed = async () => {
@@ -128,7 +128,7 @@ function MainAppContent() {
     try {
       const result = await seedQuestionBank();
       if (result.success) {
-        alert(`✅ Successfully synced ${result.count} questions across all 11 subjects to Supabase!`);
+        alert(`✅ Successfully synced ${result.count} questions across all subjects to Supabase!`);
         window.location.reload();
       } else {
         alert(`❌ Seeding failed: ${result.error}`);
@@ -178,7 +178,7 @@ function MainAppContent() {
               onClick={handleSeed}
               disabled={isSyncing}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/50 transition-colors mr-2 disabled:opacity-50"
-              title="Sync full 460-question bank to Supabase"
+              title="Sync full question bank to Supabase"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
               <span>{isSyncing ? 'Syncing...' : 'Sync DB'}</span>
@@ -283,7 +283,7 @@ function MainAppContent() {
               </div>
             }
           />
-          <Route path="/exam/:subject" element={<ExamRoute />} />
+          <Route path="/exam/:attemptId" element={<ExamRoute />} />
           <Route path="/results" element={<ResultsRoute />} />
           <Route path="/leaderboard" element={<LeaderboardView />} />
 
