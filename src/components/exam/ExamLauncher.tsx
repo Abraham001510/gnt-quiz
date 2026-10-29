@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { Subject } from '../../types/database.types';
 import { createFullJambAttempt } from '../../lib/examEngineService';
 import { useAuth } from '../../context/AuthContext';
-import { Play, Check, ShieldAlert, CheckCircle2, Lock, HelpCircle, AlertCircle } from 'lucide-react';
+import { Play, Check, ShieldAlert, CheckCircle2, Lock, AlertCircle } from 'lucide-react';
 
 interface ExamLauncherProps {
   onStartExam: (attemptId: string) => void;
@@ -49,8 +49,10 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
 
       if (!error && data) {
         setSubjects(data);
-        // Automatically select Use of English as mandatory
-        const eng = data.find((s) => s.code === 'ENG' || s.name.toLowerCase().includes('english'));
+        // STRICT: Only "Use of English" (code 'ENG' or matching 'use of english') is mandatory
+        const eng = data.find(
+          (s) => s.code === 'ENG' || s.name.toLowerCase().trim() === 'use of english'
+        );
         if (eng) {
           setEnglishSubject(eng);
           setSelectedSubjectIds([eng.id]);
@@ -64,14 +66,14 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
   }, [profile]);
 
   const handleToggleSubject = (id: string) => {
-    // Prevent deselecting mandatory Use of English
+    // Only block toggling off the mandatory "Use of English" subject
     if (englishSubject && id === englishSubject.id) return;
 
     if (selectedSubjectIds.includes(id)) {
       setSelectedSubjectIds(selectedSubjectIds.filter((sId) => sId !== id));
     } else {
       if (selectedSubjectIds.length >= 4) {
-        alert('JAMB UTME rules require exactly 4 subjects (Use of English + 3 departmental subjects).');
+        alert('JAMB UTME rules require exactly 4 subjects (Use of English + 3 chosen subjects).');
         return;
       }
       setSelectedSubjectIds([...selectedSubjectIds, id]);
@@ -96,7 +98,7 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
     if (res.success && res.attemptId) {
       onStartExam(res.attemptId);
     } else {
-      setErrorMsg(res.error || 'Failed to start examination. Please check connection.');
+      setErrorMsg(res.error || 'Failed to start examination. Please check your connection.');
     }
     setStarting(false);
   };
@@ -110,7 +112,7 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
     );
   }
 
-  // Lockout View for candidates who already completed the exam (Admin-only score policy)
+  // Lockout View for candidates who already completed the exam
   if (hasCompletedExam) {
     return (
       <div className="max-w-xl mx-auto w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 space-y-6 text-center shadow-2xl text-slate-100">
@@ -198,7 +200,9 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {subjects.map((s) => {
-            const isEnglish = s.code === 'ENG' || s.name.toLowerCase().includes('english');
+            // Strict check: Only Use of English is mandatory
+            const isMandatoryEnglish =
+              s.code === 'ENG' || s.name.toLowerCase().trim() === 'use of english';
             const isSelected = selectedSubjectIds.includes(s.id);
 
             return (
@@ -215,14 +219,14 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
                 <div className="space-y-1">
                   <div className="text-sm font-bold flex items-center gap-2">
                     <span>{s.name}</span>
-                    {isEnglish && (
+                    {isMandatoryEnglish && (
                       <span className="text-[10px] px-2 py-0.5 bg-emerald-500/20 text-emerald-300 font-mono rounded-md border border-emerald-500/30">
                         Mandatory
                       </span>
                     )}
                   </div>
                   <div className="text-[11px] text-slate-400 font-mono">
-                    {isEnglish ? '60 Questions (Section A–D)' : '40 Questions'}
+                    {isMandatoryEnglish ? '60 Questions (Section A–D)' : '40 Questions'}
                   </div>
                 </div>
 
