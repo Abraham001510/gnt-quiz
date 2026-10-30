@@ -92,11 +92,13 @@ export async function finalizeAndGradeAttempt(
   reason: string = 'manual_submit'
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // 1. Fetch student submitted answers
     const { data: studentAnswers } = await supabase
       .from('student_answers')
       .select('question_id, selected_option')
       .eq('attempt_id', attemptId);
 
+    // 2. Fetch correct options for grading
     const { data: questions } = await supabase
       .from('questions')
       .select('id, correct_option');
@@ -111,6 +113,9 @@ export async function finalizeAndGradeAttempt(
       });
     }
 
+    const percentageScore = Math.round((totalCorrect / 180) * 100);
+
+    // 3. Mark attempt as finalized in Supabase
     const { error: updateError } = await supabase
       .from('exam_attempts')
       .update({
@@ -118,19 +123,22 @@ export async function finalizeAndGradeAttempt(
         submitted_at: new Date().toISOString(),
         submission_reason: reason,
         raw_score: totalCorrect,
+        percentage_score: percentageScore,
       })
       .eq('id', attemptId);
 
-    if (updateError) throw updateError;
-    return { success: true };
-  } catch (err: any) {
-    console.error('Finalize error:', err);
-    // Safe fallback so student isn't stuck on "Grading..." screen
-    await supabase
-      .from('exam_attempts')
-      .update({ is_finalized: true, submitted_at: new Date().toISOString() })
-      .eq('id', attemptId);
+    if (updateError) {
+      console.error('Update error on finalize:', updateError);
+      // Fallback update
+      await supabase
+        .from('exam_attempts')
+        .update({ is_finalized: true, submitted_at: new Date().toISOString() })
+        .eq('id', attemptId);
+    }
 
     return { success: true };
+  } catch (err: any) {
+    console.error('Finalize attempt error:', err);
+    return { success: false, error: err.message };
   }
 }
