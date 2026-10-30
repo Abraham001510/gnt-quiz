@@ -59,33 +59,49 @@ export const WeeklyUpdatesView: React.FC = () => {
   const [explanation, setExplanation] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // 1. Fetch Candidate Exam Scores from Database
+  // 1. Fetch Candidate Exam Scores from Database Safely
   async function loadCandidateResults() {
     setLoadingResults(true);
     try {
-      const { data, error } = await supabase
+      // Fetch ALL finalized attempts
+      const { data: attemptsData, error: attemptError } = await supabase
         .from('exam_attempts')
-        .select(`
-          id,
-          student_id,
-          raw_score,
-          percentage_score,
-          submitted_at,
-          submission_reason,
-          selected_subject_ids,
-          profiles (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('is_finalized', true)
         .order('submitted_at', { ascending: false });
 
-      if (!error && data) {
-        setResults(data);
-      } else {
-        console.error('Error fetching admin student results:', error);
+      if (attemptError) {
+        console.error('Error fetching exam attempts:', attemptError);
+        setLoadingResults(false);
+        return;
       }
+
+      if (!attemptsData || attemptsData.length === 0) {
+        setResults([]);
+        setLoadingResults(false);
+        return;
+      }
+
+      // Fetch profiles to map candidate names and emails
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, phone_number');
+
+      const profileMap = new Map((profilesData || []).map((p) => [p.id, p]));
+
+      // Merge attempt records with profiles safely without dropping missing profile rows
+      const mergedResults = attemptsData.map((attempt) => {
+        const profile = profileMap.get(attempt.student_id);
+        return {
+          ...attempt,
+          profiles: profile || {
+            full_name: `Student (${attempt.student_id?.slice(0, 8)}...)`,
+            email: 'Registered Candidate',
+          },
+        };
+      });
+
+      setResults(mergedResults);
     } catch (err) {
       console.error('Unexpected error loading candidate scores:', err);
     } finally {
@@ -207,7 +223,7 @@ export const WeeklyUpdatesView: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto w-full space-y-6 text-slate-100 py-4 font-sans">
-      {/* Top Admin Mode Toggle Bar */}
+      {/* Top Navigation Tabs */}
       <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-2 rounded-2xl shadow-xl">
         <div className="flex items-center gap-2">
           <button
@@ -238,7 +254,7 @@ export const WeeklyUpdatesView: React.FC = () => {
         <button
           onClick={activeTab === 'results' ? loadCandidateResults : loadQuestions}
           className="p-2 text-slate-400 hover:text-white transition flex items-center gap-1.5 text-xs font-mono"
-          title="Refresh Current View"
+          title="Refresh Data"
         >
           <RefreshCw className={`w-4 h-4 ${loadingResults || loadingQuestions ? 'animate-spin' : ''}`} />
           <span className="hidden sm:inline">Refresh Data</span>
@@ -252,7 +268,7 @@ export const WeeklyUpdatesView: React.FC = () => {
         </div>
       )}
 
-      {/* ================= SECTION 1: CANDIDATE RESULTS TAB ================= */}
+      {/* ================= CANDIDATE RESULTS TAB ================= */}
       {activeTab === 'results' && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
           <div className="flex items-center justify-between pb-4 border-b border-slate-800">
@@ -261,7 +277,7 @@ export const WeeklyUpdatesView: React.FC = () => {
                 <Award className="w-5 h-5 text-amber-400" /> Candidate UTME Examination Submissions
               </h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Official scores recorded across all portal student examination attempts
+                Official candidate scores and records across all portal examination attempts
               </p>
             </div>
 
@@ -344,7 +360,7 @@ export const WeeklyUpdatesView: React.FC = () => {
         </div>
       )}
 
-      {/* ================= SECTION 2: QUESTION BANK TAB ================= */}
+      {/* ================= QUESTION BANK MANAGEMENT TAB ================= */}
       {activeTab === 'questions' && (
         <div className="space-y-6">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -529,7 +545,7 @@ export const WeeklyUpdatesView: React.FC = () => {
             </form>
           )}
 
-          {/* Main Question Inventory */}
+          {/* Question Inventory Container */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
               <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
