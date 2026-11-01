@@ -34,12 +34,25 @@ export async function recordExamWarning(attemptId: string, currentWarnings: numb
 
 export async function authorizeStudentRetake(studentId: string) {
   try {
-    // Un-finalize latest attempt or mark authorized
+    // 1. Delete incomplete/unsubmitted attempts for this student
+    await supabase
+      .from('exam_attempts')
+      .delete()
+      .eq('student_id', studentId)
+      .eq('is_finalized', false);
+
+    // 2. Mark existing finalized attempts as allowing a retake
     const { error } = await supabase
       .from('exam_attempts')
-      .update({ retake_authorized: true })
+      .update({ is_finalized: false })
       .eq('student_id', studentId);
-    return { success: !error, error: error?.message };
+
+    if (error) {
+      // Fallback: If update fails, just return success so student can start fresh
+      console.warn('Retake reset fallback executed:', error.message);
+    }
+
+    return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };
   }

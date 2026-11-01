@@ -27,8 +27,8 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
 
         if (!error && data) {
           setSubjects(data);
-          // Default selection to Use of English
-          const englishSub = data.find((s) => s.name.toLowerCase().includes('english'));
+          // Strictly select ONLY "Use of English" as mandatory default
+          const englishSub = data.find((s) => s.name.toLowerCase().trim() === 'use of english');
           if (englishSub) {
             setSelectedSubjectIds([englishSub.id]);
           }
@@ -43,9 +43,12 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
     fetchActiveSubjects();
   }, []);
 
+  const isMandatorySubject = (subName: string) => {
+    return subName.toLowerCase().trim() === 'use of english';
+  };
+
   const handleToggleSubject = (subId: string, subName: string) => {
-    const isEnglish = subName.toLowerCase().includes('english');
-    if (isEnglish) return; // English is mandatory
+    if (isMandatorySubject(subName)) return; // "Use of English" is mandatory
 
     setSelectedSubjectIds((prev) => {
       if (prev.includes(subId)) {
@@ -122,7 +125,7 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {subjects.map((sub) => {
-            const isEnglish = sub.name.toLowerCase().includes('english');
+            const isMandatory = isMandatorySubject(sub.name);
             const isSelected = selectedSubjectIds.includes(sub.id);
 
             return (
@@ -138,11 +141,11 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
                 <div>
                   <span className="block font-bold text-sm">{sub.name}</span>
                   <span className="text-[10px] font-mono text-slate-500">
-                    {isEnglish ? 'Mandatory (60 Qs)' : 'Departmental (40 Qs)'}
+                    {isMandatory ? 'Mandatory (60 Qs)' : 'Departmental (40 Qs)'}
                   </span>
                 </div>
 
-                {isEnglish ? (
+                {isMandatory ? (
                   <Lock className="w-4 h-4 text-slate-600" />
                 ) : isSelected ? (
                   <CheckCircle2 className="w-5 h-5 text-emerald-400" />
