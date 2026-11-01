@@ -70,6 +70,9 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
     setErrorMsg(null);
 
     try {
+      const now = new Date();
+      const deadline = new Date(now.getTime() + 120 * 60 * 1000); // 120 Minutes from now
+
       const { data, error } = await supabase
         .from('exam_attempts')
         .insert([
@@ -77,7 +80,8 @@ export const ExamLauncher: React.FC<ExamLauncherProps> = ({ onStartExam }) => {
             student_id: user.id,
             selected_subject_ids: selectedSubjectIds,
             is_finalized: false,
-            created_at: new Date().toISOString(),
+            created_at: now.toISOString(),
+            deadline_at: deadline.toISOString(), // Fix: Pass required deadline_at timestamp
           },
         ])
         .select('id')
